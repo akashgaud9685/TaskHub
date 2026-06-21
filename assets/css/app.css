@@ -1,0 +1,278 @@
+/* ============================================================
+   TaskHub - Custom Styles (Dark/Light Theme)
+   ============================================================ */
+
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
+
+* { font-family: 'Inter', system-ui, -apple-system, sans-serif; }
+
+/* ── Scrollbar ───────────────────────────────────── */
+::-webkit-scrollbar { width: 6px; height: 6px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { border-radius: 3px; }
+[data-theme="dark"] ::-webkit-scrollbar-thumb { background: #475569; }
+[data-theme="dark"] ::-webkit-scrollbar-thumb:hover { background: #64748b; }
+[data-theme="light"] ::-webkit-scrollbar-thumb { background: #cbd5e1; }
+[data-theme="light"] ::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+
+/* ── Animations ──────────────────────────────────── */
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(10px); }
+    to   { opacity: 1; transform: translateY(0); }
+}
+.fade-in { animation: fadeIn 0.3s ease-out; }
+
+/* ── Theme Variables ─────────────────────────────── */
+[data-theme="dark"] {
+    --bg-page: #0f172a;
+    --bg-card: rgba(30,41,59,0.3);
+    --bg-card-hover: rgba(30,41,59,0.5);
+    --bg-input: #1e293b;
+    --bg-table-head: rgba(30,41,59,0.8);
+    --border-color: #334155;
+    --border-subtle: rgba(51,65,85,0.5);
+    --text-primary: #fff;
+    --text-secondary: #94a3b8;
+    --text-muted: #64748b;
+    --text-on-light: #1e293b;
+    --nav-bg: rgba(30,41,59,0.5);
+    --btn-ghost-border: rgba(255,255,255,0.1);
+    --btn-ghost-hover: rgba(255,255,255,0.1);
+    --tab-border: #334155;
+    --task-bg: rgba(30,41,59,0.4);
+    --task-border: rgba(51,65,85,0.5);
+    --task-hover: rgba(51,65,85,0.3);
+    --empty-border: rgba(51,65,85,0.3);
+    --notes-bg: rgba(51,65,85,0.3);
+    --notes-border: rgba(51,65,85,0.3);
+    --input-focus: #a855f7;
+}
+
+[data-theme="light"] {
+    --bg-page: #f1f5f9;
+    --bg-card: rgba(255,255,255,0.7);
+    --bg-card-hover: #ffffff;
+    --bg-input: #ffffff;
+    --bg-table-head: rgba(226,232,240,0.8);
+    --border-color: #e2e8f0;
+    --border-subtle: #e2e8f0;
+    --text-primary: #1e293b;
+    --text-secondary: #64748b;
+    --text-muted: #94a3b8;
+    --text-on-light: #1e293b;
+    --nav-bg: rgba(255,255,255,0.7);
+    --btn-ghost-border: #e2e8f0;
+    --btn-ghost-hover: rgba(0,0,0,0.05);
+    --tab-border: #e2e8f0;
+    --task-bg: #ffffff;
+    --task-border: #e2e8f0;
+    --task-hover: #f8fafc;
+    --empty-border: #e2e8f0;
+    --notes-bg: #f8fafc;
+    --notes-border: #e2e8f0;
+    --input-focus: #9333ea;
+}
+
+/* ── Body ────────────────────────────────────────── */
+body {
+    background-color: var(--bg-page);
+    color: var(--text-primary);
+}
+
+/* ── Form inputs ─────────────────────────────────── */
+input, select, textarea {
+    background-color: var(--bg-input);
+    border: 1px solid var(--border-color);
+    color: var(--text-primary);
+    border-radius: 0.5rem;
+    padding: 0.625rem 1rem;
+    transition: all 0.2s;
+}
+input:focus, select:focus, textarea:focus {
+    outline: none;
+    box-shadow: 0 0 0 2px var(--input-focus);
+    border-color: transparent;
+}
+input::placeholder, textarea::placeholder { color: var(--text-muted); }
+select option { background-color: var(--bg-input); color: var(--text-primary); }
+
+/* Light mode date inputs need explicit bg */
+[data-theme="light"] input[type="date"],
+[data-theme="light"] input[type="time"],
+[data-theme="light"] input[type="datetime-local"] {
+    color-scheme: light;
+}
+
+/* ── Navbar ──────────────────────────────────────── */
+.navbar {
+    background: var(--nav-bg);
+    border-bottom: 1px solid var(--border-color);
+    backdrop-filter: blur(12px);
+}
+
+/* ── Buttons ─────────────────────────────────────── */
+.btn-primary {
+    background-color: #9333ea;
+    color: #fff;
+    font-weight: 500;
+    padding: 0.625rem 1.25rem;
+    border-radius: 0.5rem;
+    transition: background-color 0.2s;
+    border: none;
+    cursor: pointer;
+}
+.btn-primary:hover { background-color: #7e22ce; }
+.btn-primary:focus { outline: none; box-shadow: 0 0 0 2px #a855f7; }
+
+.btn-success {
+    background-color: #059669;
+    color: #fff;
+    font-weight: 500;
+    padding: 0.625rem 1.25rem;
+    border-radius: 0.5rem;
+    transition: background-color 0.2s;
+    border: none;
+    cursor: pointer;
+}
+.btn-success:hover { background-color: #047857; }
+
+.btn-danger {
+    background-color: #dc2626;
+    color: #fff;
+    font-weight: 500;
+    padding: 0.625rem 1.25rem;
+    border-radius: 0.5rem;
+    transition: background-color 0.2s;
+    border: none;
+    cursor: pointer;
+}
+.btn-danger:hover { background-color: #b91c1c; }
+
+.btn-ghost {
+    background: transparent;
+    color: var(--text-secondary);
+    font-weight: 500;
+    padding: 0.5rem 1rem;
+    border-radius: 0.5rem;
+    transition: all 0.2s;
+    border: 1px solid var(--btn-ghost-border);
+    cursor: pointer;
+}
+.btn-ghost:hover { background: var(--btn-ghost-hover); }
+
+/* ── Cards ───────────────────────────────────────── */
+.card {
+    background: var(--bg-card);
+    border: 1px solid var(--border-color);
+    border-radius: 1rem;
+}
+
+/* ── Table ────────────────────────────────────────── */
+.table-container {
+    overflow-x: auto;
+    border-radius: 0.75rem;
+    border: 1px solid var(--border-color);
+}
+.table-container table { width: 100%; font-size: 0.875rem; }
+.table-container thead {
+    background: var(--bg-table-head);
+    color: var(--text-secondary);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    font-size: 0.75rem;
+}
+.table-container th { padding: 0.75rem 1rem; text-align: left; font-weight: 500; }
+.table-container td { padding: 0.75rem 1rem; border-top: 1px solid var(--border-subtle); }
+.table-container tbody tr { transition: background 0.2s; }
+[data-theme="dark"] .table-container tbody tr:hover { background: rgba(255,255,255,0.02); }
+[data-theme="light"] .table-container tbody tr:hover { background: rgba(0,0,0,0.02); }
+
+/* ── Stats cards ─────────────────────────────────── */
+.stat-card {
+    background: var(--bg-card);
+    border: 1px solid var(--border-color);
+    border-radius: 0.75rem;
+    padding: 1.25rem;
+}
+
+/* ── Task cards (staff view) ─────────────────────── */
+.task-card {
+    background: var(--task-bg);
+    border: 1px solid var(--task-border);
+    border-radius: 0.75rem;
+    padding: 1.25rem;
+    transition: all 0.2s;
+}
+.task-card:hover { border-color: var(--task-hover); }
+
+/* ── Theme toggle ────────────────────────────────── */
+.theme-toggle {
+    background: transparent;
+    border: 1px solid var(--border-color);
+    border-radius: 0.5rem;
+    padding: 0.4rem 0.6rem;
+    cursor: pointer;
+    color: var(--text-secondary);
+    transition: all 0.2s;
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+    font-size: 0.8rem;
+}
+.theme-toggle:hover {
+    background: var(--btn-ghost-hover);
+    color: var(--text-primary);
+}
+
+/* ── Mobile responsive ───────────────────────────── */
+@media (max-width: 640px) {
+    .stat-card { padding: 0.75rem; }
+    .stat-card p.text-3xl { font-size: 1.5rem; }
+    .card { padding: 1rem !important; }
+    .table-container td, .table-container th { padding: 0.5rem 0.6rem; font-size: 0.75rem; }
+    .navbar .flex { gap: 0.5rem; }
+    .task-card { padding: 0.75rem; }
+}
+
+/* ── Profile photo ───────────────────────────────── */
+#profilePhotoContainer img {
+    transition: opacity 0.3s;
+}
+
+/* ── Tab scroll fix ──────────────────────────────── */
+.tab-btn { flex-shrink: 0; }
+
+/* ── Disabled form fields ────────────────────────── */
+input:disabled, select:disabled, textarea:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+/* ── Profile dropdown ───────────────────────────── */
+#profileDropdownMenu {
+    backdrop-filter: blur(16px);
+}
+#profileDropdownMenu::before {
+    content: '';
+    position: absolute;
+    top: -4px;
+    right: 16px;
+    width: 10px;
+    height: 10px;
+    background: var(--bg-page);
+    border-left: 1px solid var(--border-color);
+    border-top: 1px solid var(--border-color);
+    transform: rotate(45deg);
+}
+
+/* ── Password peek ──────────────────────────────── */
+#peekPassword {
+    transition: opacity 0.2s;
+}
+
+/* ── Note modal ─────────────────────────────────── */
+#noteModalContent {
+    max-height: 60vh;
+    overflow-y: auto;
+    line-height: 1.6;
+}
