@@ -33,6 +33,12 @@ try {
                 $params[':bid'] = $_SESSION['business_id'];
             }
 
+            $since = $_GET['since'] ?? '';
+            if ($since !== '') {
+                $sql .= ' AND wr.created_at > :since';
+                $params[':since'] = $since;
+            }
+
             $sql .= ' ORDER BY wr.created_at ASC';
 
             $stmt = $db->prepare($sql);
@@ -50,7 +56,7 @@ try {
                 exit;
             }
 
-            $check = $db->prepare('SELECT wl.id, wl.staff_id, u.business_id FROM work_logs wl JOIN users u ON u.id = wl.staff_id WHERE wl.id = :wid');
+            $check = $db->prepare('SELECT wl.id, u.business_id FROM work_logs wl JOIN users u ON u.id = wl.staff_id WHERE wl.id = :wid');
             $check->execute([':wid' => $workLogId]);
             $workLog = $check->fetch();
 
@@ -74,6 +80,12 @@ try {
                 ':name' => $_SESSION['name'] ?? 'Unknown',
                 ':msg'  => $message,
             ]);
+
+            $nf = __DIR__ . '/../storage/activity_update.txt';
+            $nd = dirname($nf);
+            if (!is_dir($nd)) mkdir($nd, 0755, true);
+            @touch($nf);
+            @touch(__DIR__ . '/../storage/task_update.txt');
 
             echo json_encode(['success' => true, 'message' => 'Reply added']);
             break;

@@ -98,7 +98,9 @@ try {
 
             $sql .= " ORDER BY 
                         CASE t.priority WHEN 'urgent' THEN 0 WHEN 'high' THEN 1 WHEN 'medium' THEN 2 ELSE 3 END, 
-                        t.due_date ASC";
+                        t.due_date ASC,
+                        t.created_at DESC
+                      LIMIT 500";
 
             $stmt = $db->prepare($sql);
             $stmt->execute($params);
@@ -308,8 +310,13 @@ try {
                 exit;
             }
 
-            $check = $db->prepare('SELECT id FROM tasks WHERE id = :id');
-            $check->execute([':id' => $taskId]);
+            if (!empty($_SESSION['business_id'])) {
+                $check = $db->prepare('SELECT t.id FROM tasks t JOIN users u ON t.assigned_to = u.id WHERE t.id = :id AND u.business_id = :bid');
+                $check->execute([':id' => $taskId, ':bid' => $_SESSION['business_id']]);
+            } else {
+                $check = $db->prepare('SELECT id FROM tasks WHERE id = :id');
+                $check->execute([':id' => $taskId]);
+            }
             if (!$check->fetch()) {
                 http_response_code(404);
                 echo json_encode(['success' => false, 'message' => 'Task not found']);

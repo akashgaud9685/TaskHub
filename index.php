@@ -172,7 +172,7 @@ TaskHub is a powerful task management and workflow automation platform. Assign t
 <form id="loginForm" autocomplete="off">
 <div id="businessCodeGroup" class="mb-4 hidden">
 <label for="business_code" class="block text-sm font-medium text-slate-300 mb-1">Business Code</label>
-<input type="text" id="business_code" name="business_code" placeholder="e.g. GAYA-71799" class="w-full px-4 py-2.5 bg-white/5 border border-white/10 rounded-lg text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-purple-500">
+<input type="text" id="business_code" name="business_code" class="w-full px-4 py-2.5 bg-white/5 border border-white/10 rounded-lg text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-purple-500">
 </div>
 <div class="mb-4">
 <label for="username" class="block text-sm font-medium text-slate-300 mb-1">Username or Email</label>

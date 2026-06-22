@@ -181,6 +181,8 @@ class SupabaseStatement
                             $val = substr($ph, 1, -1);
                         } elseif (is_numeric($ph)) {
                             $val = $ph + 0;
+                        } elseif (strtoupper($ph) === 'NULL') {
+                            $val = null;
                         } else {
                             $val = $ph;
                         }
@@ -196,7 +198,8 @@ class SupabaseStatement
                 break;
 
             case 'UPDATE':
-                if (preg_match('/SET\s+(.+?)\bWHERE\b/is', $this->sql, $m)) {
+                $sqlNoReturn = preg_replace('/\s+RETURNING\s+.*$/i', '', $this->sql);
+                if (preg_match('/SET\s+(.+?)\bWHERE\b/is', $sqlNoReturn, $m)) {
                     $data = [];
                     foreach (explode(',', trim($m[1])) as $set) {
                         if (preg_match('/(\w+)\s*=\s*(?::(\w+)|\'([^\']*)\'|(\d+))/i', trim($set), $sm)) {
@@ -209,7 +212,7 @@ class SupabaseStatement
                     }
                     $method = 'PATCH';
                     $jsonBody = json_encode($data);
-                    if (preg_match('/\bWHERE\s+(.+?)$/is', $this->sql, $wm)) {
+                    if (preg_match('/\bWHERE\s+(.+?)$/is', $sqlNoReturn, $wm)) {
                         $url .= $table . '?' . http_build_query($this->parseWhere(trim($wm[1])));
                     } else {
                         $url .= $table;
@@ -218,9 +221,10 @@ class SupabaseStatement
                 break;
 
             case 'DELETE':
+                $sqlNoReturn = preg_replace('/\s+RETURNING\s+.*$/i', '', $this->sql);
                 $method = 'DELETE';
                 $url .= $table;
-                if (preg_match('/\bWHERE\s+(.+?)$/is', $this->sql, $wm)) {
+                if (preg_match('/\bWHERE\s+(.+?)$/is', $sqlNoReturn, $wm)) {
                     $url .= '?' . http_build_query($this->parseWhere(trim($wm[1])));
                 }
                 break;

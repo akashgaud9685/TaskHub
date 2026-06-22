@@ -52,15 +52,15 @@ async function loadStaff(silent) {
                 </td>
                 <td>
                     <div class="flex gap-2 flex-wrap">
-                        <button onclick="editStaff(${s.id}, '${escHtml(s.name)}', '${escHtml(s.username)}', '${escHtml(s.department || '')}', '${s.status}')"
+                        <button onclick="editStaff(${s.id}, '${escHtmlAttr(s.name)}', '${escHtmlAttr(s.username)}', '${escHtmlAttr(s.department || '')}', '${s.status}')"
                                 class="text-xs text-blue-500 hover:text-blue-400 transition font-medium">Edit</button>
-                        <button onclick="deleteStaffPhoto(${s.id}, '${escHtml(s.photo || '')}')"
+                        <button onclick="deleteStaffPhoto(${s.id}, '${escHtmlAttr(s.photo || '')}')"
                                 class="text-xs font-medium transition ${s.photo ? 'text-red-500 hover:text-red-400' : 'text-[var(--text-muted)] cursor-not-allowed'}" ${s.photo ? '' : 'disabled'}>Delete Photo</button>
                         <button onclick="toggleStaff(${s.id})"
                                 class="text-xs font-medium transition ${s.status === 'active' ? 'text-amber-500 hover:text-amber-400' : 'text-emerald-500 hover:text-emerald-400'}">
                             ${s.status === 'active' ? 'Deactivate' : 'Activate'}
                         </button>
-                        <button onclick="deleteStaff(${s.id}, '${escHtml(s.name)}')"
+                        <button onclick="deleteStaff(${s.id}, '${escHtmlAttr(s.name)}')"
                                 class="text-xs text-red-500 hover:text-red-400 transition font-medium">Delete</button>
                     </div>
                 </td>
@@ -214,8 +214,8 @@ async function loadDepts(silent) {
                     <div class="flex gap-2">
                         ${isMgmt
                             ? '<span class="text-xs text-[var(--text-muted)]">—</span>'
-                            : `<button onclick="editDept(${d.id}, '${escHtml(d.name)}')" class="text-xs text-blue-500 hover:text-blue-400 transition font-medium">Edit</button>
-                               <button onclick="deleteDept(${d.id}, '${escHtml(d.name)}')" class="text-xs text-red-500 hover:text-red-400 transition font-medium">Delete</button>`
+                            : `<button onclick="editDept(${d.id}, '${escHtmlAttr(d.name)}')" class="text-xs text-blue-500 hover:text-blue-400 transition font-medium">Edit</button>
+                               <button onclick="deleteDept(${d.id}, '${escHtmlAttr(d.name)}')" class="text-xs text-red-500 hover:text-red-400 transition font-medium">Delete</button>`
                         }
                     </div>
                 </td>
@@ -324,7 +324,7 @@ async function loadTasks(silent) {
                 <tr>
                     <td class="font-medium">${escHtml(t.title)}</td>
                     <td class="text-[var(--text-secondary)]">${escHtml(t.assigned_name)}</td>
-                    <td><span class="inline-block text-xs px-2 py-0.5 rounded-full font-medium ${priorityStyles[t.priority] || ''}">${t.priority_label}</span></td>
+                    <td><span class="inline-block text-xs px-2 py-0.5 rounded-full font-medium ${priorityStyles[t.priority] || ''}">${escHtml(t.priority_label)}</span></td>
                     <td><span class="inline-block text-xs px-2 py-0.5 rounded-full font-medium ${statusStyles[t.status] || ''}">${t.status_label}</span></td>
                     <td class="${isOverdue ? 'text-red-500' : 'text-[var(--text-secondary)]'}">${dueDate}${isOverdue ? ' <span class="text-xs">(Overdue)</span>' : ''}</td>
                     <td class="text-[var(--text-secondary)] max-w-[150px]">
@@ -339,7 +339,7 @@ async function loadTasks(silent) {
                     <td>
                         <div class="flex gap-2 items-center">
                             <button onclick="openTaskModal(${t.id})" class="text-xs text-blue-500 hover:text-blue-400 transition font-medium">Edit</button>
-                            <button onclick="deleteTask(${t.id}, '${escHtml(t.title)}')" class="text-xs text-red-500 hover:text-red-400 transition font-medium">Delete</button>
+                            <button onclick="deleteTask(${t.id}, '${escHtmlAttr(t.title)}')" class="text-xs text-red-500 hover:text-red-400 transition font-medium">Delete</button>
                         </div>
                     </td>
                 </tr>
@@ -403,30 +403,35 @@ document.querySelectorAll('.filter-btn').forEach(btn => {
 // ─── EDIT TASK MODAL ────────────────────────────────
 async function openTaskModal(taskId) {
     showLoader();
-    const res = await fetch(`../api/tasks.php?id=${taskId}`);
-    const data = await res.json();
-    const task = data.data.find(t => t.id === taskId);
-    if (!task) { hideLoader(); showToast('Task not found', 'error'); return; }
+    try {
+        const res = await fetch(`../api/tasks.php?id=${taskId}`);
+        const data = await res.json();
+        const task = data.data && data.data.length > 0 ? data.data[0] : null;
+        if (!task) { hideLoader(); showToast('Task not found', 'error'); return; }
 
-    document.getElementById('editTaskId').value = task.id;
-    document.getElementById('editTaskTitle').value = task.title;
-    document.getElementById('editTaskDescription').value = task.description || '';
-    document.getElementById('editTaskAssignedTo').value = task.assigned_to;
-    document.getElementById('editTaskPriority').value = task.priority;
-    document.getElementById('editTaskStatus').value = task.status;
+        document.getElementById('editTaskId').value = task.id;
+        document.getElementById('editTaskTitle').value = task.title;
+        document.getElementById('editTaskDescription').value = task.description || '';
+        document.getElementById('editTaskAssignedTo').value = task.assigned_to;
+        document.getElementById('editTaskPriority').value = task.priority;
+        document.getElementById('editTaskStatus').value = task.status;
 
-    const dt = new Date(task.due_date);
-    const dateStr = dt.toISOString().split('T')[0];
-    const timeStr = dt.toTimeString().slice(0, 5);
-    document.getElementById('editTaskDueDate').value = dateStr;
-    document.getElementById('editTaskDueTime').value = timeStr === '23:59' ? '' : timeStr;
+        const dt = new Date(task.due_date);
+        const dateStr = dt.toISOString().split('T')[0];
+        const timeStr = dt.toTimeString().slice(0, 5);
+        document.getElementById('editTaskDueDate').value = dateStr;
+        document.getElementById('editTaskDueTime').value = timeStr === '23:59' ? '' : timeStr;
 
-    document.querySelectorAll('#editTaskForm input, #editTaskForm select, #editTaskForm textarea, #editTaskForm button[type="submit"]').forEach(el => {
-        el.disabled = false;
-    });
+        document.querySelectorAll('#editTaskForm input, #editTaskForm select, #editTaskForm textarea, #editTaskForm button[type="submit"]').forEach(el => {
+            el.disabled = false;
+        });
 
-    document.getElementById('taskModal').classList.remove('hidden');
-    hideLoader();
+        document.getElementById('taskModal').classList.remove('hidden');
+    } catch (_) {
+        showToast('Failed to load task', 'error');
+    } finally {
+        hideLoader();
+    }
 }
 
 function closeTaskModal() {
@@ -460,23 +465,6 @@ document.getElementById('editTaskForm').addEventListener('submit', async functio
 // ─── ACTIVITY NOTIFICATION ────────────────────────────
 let lastActivityMtime = 0;
 
-async function checkActivityNotify() {
-    try {
-        const res = await fetch('../api/activity_status.php');
-        const mtime = await res.text();
-        const ts = parseInt(mtime, 10);
-        if (ts > lastActivityMtime) {
-            lastActivityMtime = ts;
-            const section = document.getElementById('sectionActivity');
-            if (section && section.classList.contains('hidden')) {
-                document.getElementById('activityBadge').classList.remove('hidden');
-            }
-        }
-    } catch (_) {}
-}
-
-checkActivityNotify();
-
 document.getElementById('navActivity')?.addEventListener('click', function () {
     const badge = document.getElementById('activityBadge');
     badge.classList.add('hidden');
@@ -484,15 +472,49 @@ document.getElementById('navActivity')?.addEventListener('click', function () {
 
 // ─── AUTO-REFRESH ───────────────────────────────────
 let refreshInterval;
+let lastTaskMtime = 0;
+let lastStatsMtime = 0;
+
+async function getTaskMtime() {
+    try {
+        const res = await fetch('../api/last_update.php');
+        return parseInt(await res.text(), 10) || 0;
+    } catch (_) { return 0; }
+}
+
+async function getActivityMtime() {
+    try {
+        const res = await fetch('../api/activity_status.php');
+        return parseInt(await res.text(), 10) || 0;
+    } catch (_) { return 0; }
+}
 
 function startAutoRefresh() {
-    refreshInterval = setInterval(() => {
-        loadTasks(true);
-        updateStats();
+    if (refreshInterval) clearInterval(refreshInterval);
+    refreshInterval = setInterval(async () => {
+        let changed = false;
+        const taskMtime = await getTaskMtime();
+        if (taskMtime > lastTaskMtime) {
+            lastTaskMtime = taskMtime;
+            loadTasks(true);
+            changed = true;
+        }
+        const actMtime = await getActivityMtime();
+        if (actMtime > lastStatsMtime) {
+            lastStatsMtime = actMtime;
+            if (!document.getElementById('sectionActivity').classList.contains('hidden')) loadActivity(true);
+            changed = true;
+        }
+        if (actMtime > lastActivityMtime) {
+            lastActivityMtime = actMtime;
+            const section = document.getElementById('sectionActivity');
+            if (section && section.classList.contains('hidden')) {
+                document.getElementById('activityBadge').classList.remove('hidden');
+            }
+        }
+        if (changed) updateStats();
         if (!document.getElementById('sectionStaff').classList.contains('hidden')) loadStaff(true);
         if (!document.getElementById('sectionDepartments').classList.contains('hidden')) loadDepts(true);
-        if (!document.getElementById('sectionActivity').classList.contains('hidden')) loadActivity(true);
-        checkActivityNotify();
     }, 10000);
 }
 
@@ -523,6 +545,8 @@ document.addEventListener('visibilitychange', () => {
 });
 
 // ─── SESSION CHECK ──────────────────────────────────
+let sessionInterval;
+
 function checkSession() {
     fetch('../api/check_session.php')
         .then(r => r.json())
@@ -534,11 +558,19 @@ function checkSession() {
         .catch(() => {});
 }
 
-if (!document.hidden) {
-    setInterval(checkSession, 5000);
+function startSessionCheck() {
+    if (sessionInterval) clearInterval(sessionInterval);
+    sessionInterval = setInterval(checkSession, 30000);
 }
+
+function stopSessionCheck() {
+    if (sessionInterval) { clearInterval(sessionInterval); sessionInterval = null; }
+}
+
+if (!document.hidden) startSessionCheck();
 document.addEventListener('visibilitychange', () => {
-    if (!document.hidden) checkSession();
+    if (document.hidden) stopSessionCheck();
+    else { checkSession(); startSessionCheck(); }
 });
 
 // ─── STAFF ACTIVITY ─────────────────────────────────
@@ -585,14 +617,25 @@ async function loadActivity(silent) {
 }
 
 // ─── WORK LOG REPLY ──────────────────────────────────
+let replyAutoRefresh = null;
+let lastReplyCount = -1;
+let replyLastTs = 0;
+
 async function openWorkLogReply(workLogId) {
     document.getElementById('replyWorkLogId').value = workLogId;
     document.getElementById('replyMessage').value = '';
+    document.getElementById('workLogReplyModal').classList.remove('hidden');
+    document.getElementById('workLogReplyThread').innerHTML = '<p class="text-xs text-[var(--text-muted)] text-center py-4">Loading...</p>';
+    lastReplyCount = -1;
 
     try {
-        const res = await fetch(`../api/work_logs.php?id=${workLogId}`);
-        const data = await res.json();
-        const log = data.data && data.data.length > 0 ? data.data[0] : null;
+        const [logRes, repliesRes] = await Promise.all([
+            fetch(`../api/work_logs.php?id=${workLogId}`),
+            fetch(`../api/work_log_replies.php?work_log_id=${workLogId}`)
+        ]);
+
+        const logData = await logRes.json();
+        const log = logData.data && logData.data.length > 0 ? logData.data[0] : null;
         if (log) {
             document.getElementById('workLogReplyOriginal').innerHTML = `
                 <div class="flex items-start justify-between gap-3">
@@ -604,37 +647,85 @@ async function openWorkLogReply(workLogId) {
                 </div>
             `;
         }
-    } catch (_) {}
 
-    await loadWorkLogReplies(workLogId);
-    document.getElementById('workLogReplyModal').classList.remove('hidden');
+        const repliesData = await repliesRes.json();
+        renderAdminReplies(repliesData, true);
+    } catch (_) {
+        document.getElementById('workLogReplyThread').innerHTML = '<p class="text-xs text-red-500 text-center py-4">Failed to load</p>';
+    }
+
+    try {
+        const tr = await fetch('../api/activity_status.php');
+        replyLastTs = parseInt(await tr.text(), 10) || 0;
+    } catch (_) { replyLastTs = 0; }
+
+    startReplyAutoRefresh(workLogId);
 }
 
 function closeWorkLogReplyModal() {
     document.getElementById('workLogReplyModal').classList.add('hidden');
+    stopReplyAutoRefresh();
+    lastReplyCount = -1;
 }
 
-async function loadWorkLogReplies(workLogId) {
+function scrollReplyToBottom() {
+    const container = document.getElementById('workLogReplyModal').querySelector('.max-h-\\[90vh\\]');
+    if (container) {
+        requestAnimationFrame(() => { container.scrollTop = container.scrollHeight; });
+    }
+}
+
+function renderAdminReplies(data, force) {
+    if (!data.success) return;
+    if (!force && data.data.length === lastReplyCount) return;
+    lastReplyCount = data.data.length;
     const container = document.getElementById('workLogReplyThread');
-    try {
-        const res = await fetch(`../api/work_log_replies.php?work_log_id=${workLogId}`);
-        const data = await res.json();
-        if (!data.success || data.data.length === 0) {
-            container.innerHTML = '<p class="text-xs text-[var(--text-muted)] text-center py-4">No replies yet</p>';
-            return;
-        }
-        container.innerHTML = data.data.map(r => `
-            <div class="p-3 rounded-lg border" style="background:${r.user_role === 'admin' ? 'rgba(147,51,234,0.08)' : 'var(--bg-card)'}; border-color:var(--border-color);">
+    if (data.data.length === 0) {
+        container.innerHTML = '<p class="text-xs text-[var(--text-muted)] text-center py-4">No replies yet</p>';
+        return;
+    }
+    const wasNearBottom = container && (container.scrollHeight - container.scrollTop - container.clientHeight) < 100;
+    container.innerHTML = data.data.map(r => `
+        <div class="flex ${r.user_role === 'admin' ? 'justify-end' : 'justify-start'}">
+            <div class="max-w-[85%] p-3 rounded-2xl border" style="background:${r.user_role === 'admin' ? 'rgba(147,51,234,0.15)' : 'var(--bg-card)'}; border-color:${r.user_role === 'admin' ? 'rgba(147,51,234,0.3)' : 'var(--border-color)'};">
                 <div class="flex items-center gap-2 mb-1">
                     <span class="text-xs font-medium">${escHtml(r.user_name)}</span>
                     <span class="text-xs px-1.5 py-0.5 rounded-full ${r.user_role === 'admin' ? 'bg-purple-500/20 text-purple-400' : 'bg-blue-500/20 text-blue-400'}">${r.user_role}</span>
-                    <span class="text-xs text-[var(--text-muted)]">${new Date(r.created_at).toLocaleString()}</span>
                 </div>
                 <p class="text-sm whitespace-pre-wrap">${escHtml(r.message)}</p>
+                <p class="text-xs text-[var(--text-muted)] mt-1">${new Date(r.created_at).toLocaleString()}</p>
             </div>
-        `).join('');
-    } catch (_) {
-        container.innerHTML = '<p class="text-xs text-red-500 text-center py-4">Failed to load replies</p>';
+        </div>
+    `).join('');
+    if (force || wasNearBottom) scrollReplyToBottom();
+}
+
+async function loadWorkLogReplies(workLogId) {
+    try {
+        const res = await fetch(`../api/work_log_replies.php?work_log_id=${workLogId}`);
+        const data = await res.json();
+        renderAdminReplies(data, false);
+    } catch (_) {}
+}
+
+function startReplyAutoRefresh(workLogId) {
+    stopReplyAutoRefresh();
+    replyAutoRefresh = setInterval(async () => {
+        try {
+            const res = await fetch('../api/activity_status.php');
+            const ts = parseInt(await res.text(), 10);
+            if (ts > replyLastTs) {
+                replyLastTs = ts;
+                await loadWorkLogReplies(workLogId);
+            }
+        } catch (_) {}
+    }, 2000);
+}
+
+function stopReplyAutoRefresh() {
+    if (replyAutoRefresh) {
+        clearInterval(replyAutoRefresh);
+        replyAutoRefresh = null;
     }
 }
 
@@ -643,6 +734,8 @@ document.getElementById('workLogReplyForm')?.addEventListener('submit', async fu
     const workLogId = document.getElementById('replyWorkLogId').value;
     const message = document.getElementById('replyMessage').value.trim();
     if (!message) return;
+    const btn = this.querySelector('button[type="submit"]');
+    btn.disabled = true;
     try {
         const formData = new FormData();
         formData.append('work_log_id', workLogId);
@@ -651,13 +744,23 @@ document.getElementById('workLogReplyForm')?.addEventListener('submit', async fu
         const data = await res.json();
         if (data.success) {
             document.getElementById('replyMessage').value = '';
+            lastReplyCount = -1;
+            replyLastTs = Date.now() / 1000;
             await loadWorkLogReplies(workLogId);
-            showToast('Reply sent');
         } else {
             showToast(data.message, 'error');
         }
     } catch (err) {
         showToast('Network error', 'error');
+    } finally {
+        btn.disabled = false;
+    }
+});
+
+document.getElementById('replyMessage')?.addEventListener('keydown', function (e) {
+    if (e.key === 'Enter' && !e.shiftKey) {
+        e.preventDefault();
+        document.getElementById('workLogReplyForm')?.requestSubmit();
     }
 });
 
@@ -687,6 +790,10 @@ function escHtml(str) {
     return div.innerHTML;
 }
 
+function escHtmlAttr(str) {
+    return (str || '').replace(/\\/g, '\\\\').replace(/'/g, "\\'").replace(/\n/g, '\\n').replace(/\r/g, '').replace(/\//g, '\\/');
+}
+
 // ─── INIT ────────────────────────────────────────────
 const savedSection = sessionStorage.getItem('admin_section');
 if (savedSection && savedSection !== 'dashboard') {
@@ -695,4 +802,9 @@ if (savedSection && savedSection !== 'dashboard') {
     loadTasks();
 }
 updateStats();
+Promise.all([getTaskMtime(), getActivityMtime()]).then(([tm, am]) => {
+    lastTaskMtime = tm;
+    lastStatsMtime = am;
+    lastActivityMtime = am;
+});
 startAutoRefresh();

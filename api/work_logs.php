@@ -26,9 +26,14 @@ try {
                 $dateTo = $_GET['date_to'] ?? '';
 
                 $sql = 'SELECT w.*, u.name AS staff_name, u.department,
-                        (SELECT COUNT(*) FROM work_log_replies WHERE work_log_id = w.id) AS reply_count
+                        COALESCE(rc.reply_count, 0) AS reply_count
                         FROM work_logs w
-                        JOIN users u ON w.staff_id = u.id';
+                        JOIN users u ON w.staff_id = u.id
+                        LEFT JOIN (
+                            SELECT work_log_id, COUNT(*) AS reply_count
+                            FROM work_log_replies
+                            GROUP BY work_log_id
+                        ) rc ON w.id = rc.work_log_id';
                 $conditions = [];
                 $params = [];
 
@@ -37,13 +42,9 @@ try {
                     $params[':lid'] = $logIdFilter;
                 }
 
-                if (!empty($_SESSION['business_id']) && $logIdFilter === 0) {
+                if (!empty($_SESSION['business_id'])) {
                     $conditions[] = 'u.business_id = :bid';
                     $params[':bid'] = $_SESSION['business_id'];
-                }
-                if (!empty($_SESSION['business_id']) && $logIdFilter > 0) {
-                    $conditions[] = 'u.business_id = :bid2';
-                    $params[':bid2'] = $_SESSION['business_id'];
                 }
 
                 if ($staffFilter > 0) {
@@ -62,24 +63,38 @@ try {
                     $sql .= ' WHERE ' . implode(' AND ', $conditions);
                 }
                 $sql .= ' ORDER BY w.log_date DESC, w.created_at DESC';
+                if ($logIdFilter === 0) {
+                    $sql .= ' LIMIT 50';
+                }
             } else {
                 $dateFrom = $_GET['date_from'] ?? '';
                 $dateTo = $_GET['date_to'] ?? '';
-                $sql = 'SELECT *, (SELECT COUNT(*) FROM work_log_replies WHERE work_log_id = work_logs.id) AS reply_count FROM work_logs WHERE staff_id = :uid';
+                $sql = 'SELECT w.*,
+                        COALESCE(rc.reply_count, 0) AS reply_count
+                        FROM work_logs w
+                        LEFT JOIN (
+                            SELECT work_log_id, COUNT(*) AS reply_count
+                            FROM work_log_replies
+                            GROUP BY work_log_id
+                        ) rc ON w.id = rc.work_log_id
+                        WHERE w.staff_id = :uid';
                 $params = [':uid' => $userId];
                 if ($logIdFilter > 0) {
-                    $sql .= ' AND id = :lid';
+                    $sql .= ' AND w.id = :lid';
                     $params[':lid'] = $logIdFilter;
                 }
                 if ($dateFrom !== '') {
-                    $sql .= ' AND log_date >= :df';
+                    $sql .= ' AND w.log_date >= :df';
                     $params[':df'] = $dateFrom;
                 }
                 if ($dateTo !== '') {
-                    $sql .= ' AND log_date <= :dt';
+                    $sql .= ' AND w.log_date <= :dt';
                     $params[':dt'] = $dateTo;
                 }
-                $sql .= ' ORDER BY log_date DESC, created_at DESC';
+                $sql .= ' ORDER BY w.log_date DESC, w.created_at DESC';
+                if ($logIdFilter === 0) {
+                    $sql .= ' LIMIT 50';
+                }
             }
 
             $stmt = $db->prepare($sql);

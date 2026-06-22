@@ -1,11 +1,21 @@
 <?php
-require_once __DIR__ . '/../config/database.php';
+header('Content-Type: application/json');
 
 session_start();
 if (!isset($_SESSION['user_id'])) {
     echo json_encode(['valid' => false]);
     exit;
 }
+
+// Verify DB token every 30 seconds; otherwise trust session
+$now = time();
+$lastCheck = $_SESSION['_last_session_check'] ?? 0;
+if (($now - $lastCheck) < 30) {
+    echo json_encode(['valid' => true]);
+    exit;
+}
+
+require_once __DIR__ . '/../config/database.php';
 
 try {
     $db = getBizDB();
@@ -14,7 +24,8 @@ try {
     $dbToken = $stmt->fetchColumn();
 
     $valid = $dbToken !== false && $dbToken === ($_SESSION['session_token'] ?? null);
+    if ($valid) $_SESSION['_last_session_check'] = $now;
     echo json_encode(['valid' => $valid]);
 } catch (PDOException $e) {
-    echo json_encode(['valid' => true]);
+    echo json_encode(['valid' => false]);
 }

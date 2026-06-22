@@ -339,8 +339,8 @@ if (!empty($_SESSION['business_id'])) {
                         <input type="text" id="staffPassword" name="password" placeholder="Min 8 chars for new" class="w-full">
                     </div>
                     <div>
-                        <label class="block text-xs text-[var(--text-secondary)] mb-1">Department</label>
-                        <select id="staffDepartment" name="department" class="w-full">
+                        <label class="block text-xs text-[var(--text-secondary)] mb-1">Department <span class="text-red-400">*</span></label>
+                        <select id="staffDepartment" name="department" required class="w-full">
                             <option value="">Select...</option>
                             <?php foreach ($departments as $d): ?>
                                 <?php if (strcasecmp($d['name'], 'Management') === 0) continue; ?>

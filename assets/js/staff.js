@@ -170,7 +170,7 @@ function renderTasks() {
                     <div class="flex-1 min-w-0 w-full">
                         <div class="flex items-center gap-2 mb-1 flex-wrap">
                             <h3 class="font-semibold text-sm sm:text-base">${escHtml(t.title)}</h3>
-                            <span class="text-xs px-2 py-0.5 rounded-full font-medium ${priorityStyles[t.priority] || ''}">${t.priority_label}</span>
+                            <span class="text-xs px-2 py-0.5 rounded-full font-medium ${priorityStyles[t.priority] || ''}">${escHtml(t.priority_label)}</span>
                             ${t.priority === 'urgent' ? '<span class="text-xs text-red-500 font-medium">HIGH PRIORITY</span>' : ''}
                         </div>
                         ${t.description ? `<p class="text-sm mt-1" style="color:var(--text-secondary);">${escHtml(t.description)}</p>` : ''}
@@ -206,7 +206,7 @@ function renderActions(task) {
                 <textarea id="notes-${task.id}" placeholder="Add work notes (optional)..." rows="2" 
                           class="text-sm w-full sm:w-64"></textarea>
                 <div class="flex gap-2">
-                    <button onclick="completeTask(${task.id})" class="btn-success text-sm flex-1 whitespace-nowrap">Mark Completed</button>
+                    <button onclick="completeTask(${task.id}, '${escHtmlAttr(task.title)}')" class="btn-success text-sm flex-1 whitespace-nowrap">Mark Completed</button>
                     <button onclick="undoTask(${task.id}, 'todo')" class="btn-ghost text-sm px-3" title="Move back to To-Do">
                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h10a8 8 0 018 8v2M3 10l6 6m-6-6l6-6"/></svg>
                     </button>
@@ -243,7 +243,9 @@ async function startTask(taskId) {
 }
 
 // ─── COMPLETE TASK ───────────────────────────────────
-async function completeTask(taskId) {
+async function completeTask(taskId, title) {
+    const confirmed = await confirmAction(`Mark "${title}" as completed?`);
+    if (!confirmed) return;
     showLoader();
     const notes = document.getElementById(`notes-${taskId}`)?.value || '';
     try {
@@ -308,16 +310,24 @@ function checkForUpdates() {
         .catch(() => {});
 }
 
+function startLiveCheck() {
+    if (checkInterval) clearInterval(checkInterval);
+    checkForUpdates();
+    checkInterval = setInterval(checkForUpdates, 10000);
+}
+
+function stopLiveCheck() {
+    if (checkInterval) { clearInterval(checkInterval); checkInterval = null; }
+}
+
 document.addEventListener('visibilitychange', () => {
-    if (document.hidden) {
-        if (checkInterval) clearInterval(checkInterval);
-    } else {
-        checkForUpdates();
-        checkInterval = setInterval(checkForUpdates, 10000);
-    }
+    if (document.hidden) stopLiveCheck();
+    else startLiveCheck();
 });
 
 // ─── SESSION CHECK ──────────────────────────────────
+let sessionInterval;
+
 function checkSession() {
     fetch('../api/check_session.php')
         .then(r => r.json())
@@ -329,11 +339,19 @@ function checkSession() {
         .catch(() => {});
 }
 
-if (!document.hidden) {
-    setInterval(checkSession, 5000);
+function startSessionCheck() {
+    if (sessionInterval) clearInterval(sessionInterval);
+    sessionInterval = setInterval(checkSession, 30000);
 }
+
+function stopSessionCheck() {
+    if (sessionInterval) { clearInterval(sessionInterval); sessionInterval = null; }
+}
+
+if (!document.hidden) { startLiveCheck(); startSessionCheck(); }
 document.addEventListener('visibilitychange', () => {
-    if (!document.hidden) checkSession();
+    if (document.hidden) { stopLiveCheck(); stopSessionCheck(); }
+    else { checkSession(); startLiveCheck(); startSessionCheck(); }
 });
 
 // ─── UTILITY ─────────────────────────────────────────
@@ -341,6 +359,10 @@ function escHtml(str) {
     const div = document.createElement('div');
     div.textContent = str || '';
     return div.innerHTML;
+}
+
+function escHtmlAttr(str) {
+    return (str || '').replace(/\\/g, '\\\\').replace(/'/g, "\\'").replace(/\n/g, '\\n').replace(/\r/g, '').replace(/\//g, '\\/');
 }
 
 // ─── PROFILE DROPDOWN ──────────────────────────────
@@ -446,14 +468,25 @@ async function loadMyLogs() {
 }
 
 // ─── WORK LOG REPLY (STAFF) ─────────────────────────
+let staffReplyAutoRefresh = null;
+let staffLastReplyCount = -1;
+let staffReplyLastTs = 0;
+
 async function openStaffReply(workLogId) {
     document.getElementById('staffReplyWorkLogId').value = workLogId;
     document.getElementById('staffReplyMessage').value = '';
+    document.getElementById('staffReplyModal').classList.remove('hidden');
+    document.getElementById('staffReplyThread').innerHTML = '<p class="text-xs text-[var(--text-muted)] text-center py-4">Loading...</p>';
+    staffLastReplyCount = -1;
 
     try {
-        const res = await fetch(`../api/work_logs.php?id=${workLogId}`);
-        const data = await res.json();
-        const log = data.data && data.data.length > 0 ? data.data[0] : data.data;
+        const [logRes, repliesRes] = await Promise.all([
+            fetch(`../api/work_logs.php?id=${workLogId}`),
+            fetch(`../api/work_log_replies.php?work_log_id=${workLogId}`)
+        ]);
+
+        const logData = await logRes.json();
+        const log = logData.data && logData.data.length > 0 ? logData.data[0] : logData.data;
         if (log) {
             document.getElementById('staffReplyOriginal').innerHTML = `
                 <div>
@@ -462,37 +495,85 @@ async function openStaffReply(workLogId) {
                 </div>
             `;
         }
-    } catch (_) {}
 
-    await loadStaffReplies(workLogId);
-    document.getElementById('staffReplyModal').classList.remove('hidden');
+        const repliesData = await repliesRes.json();
+        renderStaffReplies(repliesData, true);
+    } catch (_) {
+        document.getElementById('staffReplyThread').innerHTML = '<p class="text-xs text-red-500 text-center py-4">Failed to load</p>';
+    }
+
+    try {
+        const tr = await fetch('../api/last_update.php');
+        staffReplyLastTs = parseInt(await tr.text(), 10) || 0;
+    } catch (_) { staffReplyLastTs = 0; }
+
+    startStaffReplyAutoRefresh(workLogId);
 }
 
 function closeStaffReplyModal() {
     document.getElementById('staffReplyModal').classList.add('hidden');
+    stopStaffReplyAutoRefresh();
+    staffLastReplyCount = -1;
 }
 
-async function loadStaffReplies(workLogId) {
+function scrollStaffReplyToBottom() {
+    const container = document.getElementById('staffReplyModal').querySelector('.max-h-\\[90vh\\]');
+    if (container) {
+        requestAnimationFrame(() => { container.scrollTop = container.scrollHeight; });
+    }
+}
+
+function renderStaffReplies(data, force) {
+    if (!data.success) return;
+    if (!force && data.data.length === staffLastReplyCount) return;
+    staffLastReplyCount = data.data.length;
     const container = document.getElementById('staffReplyThread');
-    try {
-        const res = await fetch(`../api/work_log_replies.php?work_log_id=${workLogId}`);
-        const data = await res.json();
-        if (!data.success || data.data.length === 0) {
-            container.innerHTML = '<p class="text-xs text-[var(--text-muted)] text-center py-4">No replies yet from admin</p>';
-            return;
-        }
-        container.innerHTML = data.data.map(r => `
-            <div class="p-3 rounded-lg border" style="background:${r.user_role === 'admin' ? 'rgba(147,51,234,0.08)' : 'var(--bg-card)'}; border-color:var(--border-color);">
+    if (data.data.length === 0) {
+        container.innerHTML = '<p class="text-xs text-[var(--text-muted)] text-center py-4">No replies yet</p>';
+        return;
+    }
+    const wasNearBottom = container && (container.scrollHeight - container.scrollTop - container.clientHeight) < 100;
+    container.innerHTML = data.data.map(r => `
+        <div class="flex ${r.user_role === 'staff' ? 'justify-end' : 'justify-start'}">
+            <div class="max-w-[85%] p-3 rounded-2xl border" style="background:${r.user_role === 'staff' ? 'rgba(59,130,246,0.15)' : 'var(--bg-card)'}; border-color:${r.user_role === 'staff' ? 'rgba(59,130,246,0.3)' : 'var(--border-color)'};">
                 <div class="flex items-center gap-2 mb-1">
                     <span class="text-xs font-medium">${escHtml(r.user_name)}</span>
                     <span class="text-xs px-1.5 py-0.5 rounded-full ${r.user_role === 'admin' ? 'bg-purple-500/20 text-purple-400' : 'bg-blue-500/20 text-blue-400'}">${r.user_role}</span>
-                    <span class="text-xs text-[var(--text-muted)]">${new Date(r.created_at).toLocaleString()}</span>
                 </div>
                 <p class="text-sm whitespace-pre-wrap">${escHtml(r.message)}</p>
+                <p class="text-xs text-[var(--text-muted)] mt-1">${new Date(r.created_at).toLocaleString()}</p>
             </div>
-        `).join('');
-    } catch (_) {
-        container.innerHTML = '<p class="text-xs text-red-500 text-center py-4">Failed to load replies</p>';
+        </div>
+    `).join('');
+    if (force || wasNearBottom) scrollStaffReplyToBottom();
+}
+
+async function loadStaffReplies(workLogId) {
+    try {
+        const res = await fetch(`../api/work_log_replies.php?work_log_id=${workLogId}`);
+        const data = await res.json();
+        renderStaffReplies(data, false);
+    } catch (_) {}
+}
+
+function startStaffReplyAutoRefresh(workLogId) {
+    stopStaffReplyAutoRefresh();
+    staffReplyAutoRefresh = setInterval(async () => {
+        try {
+            const res = await fetch('../api/last_update.php');
+            const ts = parseInt(await res.text(), 10);
+            if (ts > staffReplyLastTs) {
+                staffReplyLastTs = ts;
+                await loadStaffReplies(workLogId);
+            }
+        } catch (_) {}
+    }, 2000);
+}
+
+function stopStaffReplyAutoRefresh() {
+    if (staffReplyAutoRefresh) {
+        clearInterval(staffReplyAutoRefresh);
+        staffReplyAutoRefresh = null;
     }
 }
 
@@ -501,6 +582,8 @@ document.getElementById('staffReplyForm')?.addEventListener('submit', async func
     const workLogId = document.getElementById('staffReplyWorkLogId').value;
     const message = document.getElementById('staffReplyMessage').value.trim();
     if (!message) return;
+    const btn = this.querySelector('button[type="submit"]');
+    btn.disabled = true;
     try {
         const formData = new FormData();
         formData.append('work_log_id', workLogId);
@@ -509,13 +592,23 @@ document.getElementById('staffReplyForm')?.addEventListener('submit', async func
         const data = await res.json();
         if (data.success) {
             document.getElementById('staffReplyMessage').value = '';
+            staffLastReplyCount = -1;
+            staffReplyLastTs = Date.now() / 1000;
             await loadStaffReplies(workLogId);
-            showToast('Reply sent');
         } else {
             showToast(data.message, 'error');
         }
     } catch (err) {
         showToast('Network error', 'error');
+    } finally {
+        btn.disabled = false;
+    }
+});
+
+document.getElementById('staffReplyMessage')?.addEventListener('keydown', function (e) {
+    if (e.key === 'Enter' && !e.shiftKey) {
+        e.preventDefault();
+        document.getElementById('staffReplyForm')?.requestSubmit();
     }
 });
 
@@ -545,6 +638,4 @@ document.getElementById('cropModal')?.addEventListener('click', function (e) {
 loadTasks();
 fetch('../api/last_update.php').then(r => r.text()).then(ts => {
     lastUpdate = parseInt(ts, 10) || 0;
-}).finally(() => {
-    checkInterval = setInterval(checkForUpdates, 10000);
 });
