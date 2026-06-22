@@ -41,6 +41,7 @@ html{scroll-behavior:smooth}
 <a href="features.php" class="text-sm text-slate-300 hover:text-white transition">Features</a>
 <a href="about.php" class="text-sm text-slate-300 hover:text-white transition">About</a>
 <a href="contact.php" class="text-sm text-slate-300 hover:text-white transition">Contact</a>
+<a href="usermanual.php" class="text-sm text-slate-300 hover:text-white transition">Manual</a>
 </div>
 <div class="flex items-center gap-3">
 <button onclick="toggleRegister()" class="text-sm text-slate-300 hover:text-white transition hidden sm:inline">Register</button>
@@ -107,18 +108,22 @@ TaskHub is a powerful task management and workflow automation platform. Assign t
 <div class="dash-card bg-white/5 rounded-2xl p-6 border border-white/10 text-center">
 <div class="w-12 h-12 rounded-xl bg-purple-600/20 flex items-center justify-center mx-auto mb-4"><svg class="w-6 h-6 text-purple-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/></svg></div>
 <h3 class="font-semibold mb-1">Task Management</h3>
-<p class="text-xs text-slate-400">Create, assign, track tasks with priorities &amp; due dates.</p>
+<p class="text-xs text-slate-400">Create, assign, prioritize, and track tasks with real-time updates and status workflow.</p>
 </div>
 <div class="dash-card bg-white/5 rounded-2xl p-6 border border-white/10 text-center">
 <div class="w-12 h-12 rounded-xl bg-blue-600/20 flex items-center justify-center mx-auto mb-4"><svg class="w-6 h-6 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197"/></svg></div>
-<h3 class="font-semibold mb-1">Staff Management</h3>
-<p class="text-xs text-slate-400">Manage team, assign departments, control access.</p>
+<h3 class="font-semibold mb-1">Staff &amp; Department Management</h3>
+<p class="text-xs text-slate-400">Manage your team with departments, photo uploads, and role-based access control.</p>
 </div>
 <div class="dash-card bg-white/5 rounded-2xl p-6 border border-white/10 text-center">
 <div class="w-12 h-12 rounded-xl bg-emerald-600/20 flex items-center justify-center mx-auto mb-4"><svg class="w-6 h-6 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/></svg></div>
-<h3 class="font-semibold mb-1">Activity Tracking</h3>
-<p class="text-xs text-slate-400">Monitor work logs, track progress in real time.</p>
+<h3 class="font-semibold mb-1">Activity &amp; Work Logs</h3>
+<p class="text-xs text-slate-400">Staff log daily work, admin reviews with threaded replies and real-time notifications.</p>
 </div>
+</div>
+<div class="mt-8 p-4 rounded-xl bg-amber-500/5 border border-amber-500/20 text-xs text-slate-400 flex items-start gap-3">
+<svg class="w-5 h-5 text-amber-400 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+<span>TaskHub is a cloud-based application. For optimal performance, a <strong>stable internet connection with 2-3 Mbps speed</strong> is recommended. Slower connections may affect real-time updates and file uploads.</span>
 </div>
 <div class="text-center mt-10">
 <a href="features.php" class="inline-flex items-center gap-2 text-purple-400 hover:text-purple-300 font-medium transition">View All Features <span>&rarr;</span></a>
@@ -130,9 +135,9 @@ TaskHub is a powerful task management and workflow automation platform. Assign t
 <section class="py-16 border-t border-white/5">
 <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
 <div class="grid grid-cols-2 md:grid-cols-4 gap-8 text-center">
-<div><p class="text-4xl font-bold text-purple-400">10+</p><p class="text-sm text-slate-500 mt-1">Powerful Features</p></div>
-<div><p class="text-4xl font-bold text-blue-400">50+</p><p class="text-sm text-slate-500 mt-1">Active Businesses</p></div>
-<div><p class="text-4xl font-bold text-emerald-400">100+</p><p class="text-sm text-slate-500 mt-1">Tasks Managed</p></div>
+<div><p class="text-4xl font-bold text-purple-400">9+</p><p class="text-sm text-slate-500 mt-1">Powerful Features</p></div>
+<div><p class="text-4xl font-bold text-blue-400">100+</p><p class="text-sm text-slate-500 mt-1">Active Businesses</p></div>
+<div><p class="text-4xl font-bold text-emerald-400">1K+</p><p class="text-sm text-slate-500 mt-1">Tasks Managed</p></div>
 <div><p class="text-4xl font-bold text-amber-400">99.9%</p><p class="text-sm text-slate-500 mt-1">Uptime</p></div>
 </div>
 </div>
@@ -144,14 +149,15 @@ TaskHub is a powerful task management and workflow automation platform. Assign t
 <div class="grid sm:grid-cols-2 lg:grid-cols-4 gap-8 mb-8">
 <div>
 <div class="flex items-center gap-2 mb-4"><div class="w-6 h-6 rounded bg-purple-600 flex items-center justify-center text-xs font-bold">T</div><span class="font-bold"><span class="text-purple-400">Task</span>Hub</span></div>
-<p class="text-sm text-slate-500">Streamline your workflow, manage tasks, and grow your business.</p>
+<p class="text-sm text-slate-500 mb-2">Streamline your workflow, manage tasks, and grow your business.</p>
+<p class="text-xs text-slate-500">Task Management &amp; Workflow Automation System</p>
 </div>
-<div><h4 class="font-semibold mb-4 text-sm uppercase tracking-wider text-slate-400">Product</h4><ul class="space-y-2 text-sm text-slate-500"><li><a href="features.php" class="hover:text-white transition">Features</a></li><li><button onclick="toggleRegister()" class="hover:text-white transition text-left">Register</button></li></ul></div>
+<div><h4 class="font-semibold mb-4 text-sm uppercase tracking-wider text-slate-400">Product</h4><ul class="space-y-2 text-sm text-slate-500"><li><a href="features.php" class="hover:text-white transition">Features</a></li><li><a href="usermanual.php" class="hover:text-white transition">User Manual</a></li><li><button onclick="toggleRegister()" class="hover:text-white transition text-left">Register</button></li></ul></div>
 <div><h4 class="font-semibold mb-4 text-sm uppercase tracking-wider text-slate-400">Company</h4><ul class="space-y-2 text-sm text-slate-500"><li><a href="about.php" class="hover:text-white transition">About Us</a></li><li><a href="contact.php" class="hover:text-white transition">Contact</a></li><li><button onclick="toggleLogin()" class="hover:text-white transition text-left">Login</button></li></ul></div>
 <div><h4 class="font-semibold mb-4 text-sm uppercase tracking-wider text-slate-400">Legal</h4><ul class="space-y-2 text-sm text-slate-500"><li><a href="privacy.php" class="hover:text-white transition">Privacy Policy</a></li><li><a href="terms.php" class="hover:text-white transition">Terms of Service</a></li></ul></div>
 </div>
 <div class="border-t border-white/5 pt-8 text-center text-xs text-slate-600">
-<p>TaskHub &mdash; Task Management &amp; Workflow Automation System &bull; Developed by <span class="text-purple-400">Aakash Gaud</span> &copy; 2026 All Rights Reserved</p>
+<p>TaskHub &mdash; Developed by <span class="text-purple-400">Aakash Gaud</span> (<button onclick="var b=this;var l=this.nextElementSibling;b.classList.add('hidden');l.classList.remove('hidden');setTimeout(function(){l.classList.add('hidden');b.classList.remove('hidden')},5000)" class="text-purple-400 hover:text-purple-300 bg-purple-500/10 px-1.5 py-0.5 rounded text-xs font-medium inline-flex items-center gap-1">Show Email</button><a href="mailto:akashgaud7389@gmail.com" class="text-purple-400 hover:text-purple-300 hidden">akashgaud7389@gmail.com</a>) &copy; 2026 All Rights Reserved</p>
 </div>
 </div>
 </footer>

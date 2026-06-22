@@ -129,6 +129,7 @@ if (!empty($_SESSION['business_id'])) {
             <div class="flex gap-2 py-2">
                 <button onclick="openWorkLogModal()" class="text-xs bg-purple-500/20 text-purple-400 hover:bg-purple-500/30 transition px-3 py-1.5 rounded-lg font-medium whitespace-nowrap">+ Log Work</button>
                 <button onclick="viewMyLogs()" class="text-xs bg-blue-500/20 text-blue-400 hover:bg-blue-500/30 transition px-3 py-1.5 rounded-lg font-medium whitespace-nowrap">My Logs</button>
+                <a href="../usermanual.php#staff-guide" target="_blank" class="ml-auto text-xs text-purple-400 hover:text-purple-300 hover:bg-purple-500/10 transition px-3 py-1.5 rounded-lg font-medium whitespace-nowrap flex items-center gap-1.5"><svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"/></svg>Help</a>
             </div>
         </div>
     </div>
@@ -175,13 +176,6 @@ if (!empty($_SESSION['business_id'])) {
         </div>
 
     </div>
-
-    <footer class="border-t mt-12 py-6" style="border-color:var(--border-color);">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center text-xs" style="color:var(--text-muted);">
-            TaskHub &mdash; Task Management &amp; Workflow Automation System<br>
-            Developed by <span class="font-semibold text-purple-400">Aakash Gaud</span> (akashgaud7389@gmail.com) &copy; 2026 All Rights Reserved
-        </div>
-    </footer>
 
     <!-- ─── WORK LOG MODAL ────────────────────────── -->
     <div id="workLogModal" class="fixed inset-0 z-50 hidden flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
@@ -278,6 +272,12 @@ if (!empty($_SESSION['business_id'])) {
             </div>
         </div>
     </div>
+
+    <footer class="border-t mt-12 py-6" style="border-color:var(--border-color);">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center text-xs" style="color:var(--text-muted);">
+            TaskHub &mdash; Task Management &amp; Workflow Automation System &mdash; Developed by <span class="text-purple-400">Aakash Gaud</span> (<button onclick="var b=this;var l=this.nextElementSibling;b.classList.add('hidden');l.classList.remove('hidden');setTimeout(function(){l.classList.add('hidden');b.classList.remove('hidden')},5000)" class="text-purple-400 hover:text-purple-300 bg-purple-500/10 px-1.5 py-0.5 rounded text-xs font-medium inline-flex items-center gap-1">Show Email</button><a href="mailto:akashgaud7389@gmail.com" class="text-purple-400 hover:text-purple-300 hidden">akashgaud7389@gmail.com</a>) &copy; 2026 All Rights Reserved
+        </div>
+    </footer>
 
     <script src="../assets/js/app.js"></script>
     <script src="../assets/js/staff.js"></script>
