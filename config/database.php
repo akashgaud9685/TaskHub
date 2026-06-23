@@ -7,8 +7,8 @@ define('DB_NAME', getenv('DB_NAME') ?: 'postgres');
 define('DB_USER', getenv('DB_USER') ?: 'postgres');
 define('DB_PASS', getenv('DB_PASS') ?: 'Akashgaud@7389#');
 
-define('SUPABASE_URL', 'https://fmigjebieplnswqpgbgv.supabase.co');
-define('SUPABASE_ANON_KEY', 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZtaWdqZWJpZXBsbnN3cXBnYmd2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODIwNTc4OTQsImV4cCI6MjA5NzYzMzg5NH0.paRSi8SFT0HDYCMiCyBqvqYiQKlzNGMfyWn2Fj2h_Fw');
+define('SUPABASE_URL', getenv('SUPABASE_URL') ?: 'https://fmigjebieplnswqpgbgv.supabase.co');
+define('SUPABASE_ANON_KEY', getenv('SUPABASE_ANON_KEY') ?: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZtaWdqZWJpZXBsbnN3cXBnYmd2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODIwNTc4OTQsImV4cCI6MjA5NzYzMzg5NH0.paRSi8SFT0HDYCMiCyBqvqYiQKlzNGMfyWn2Fj2h_Fw');
 
 function getDB()
 {
