@@ -430,11 +430,35 @@ class SupabasePDO
 {
     private $apiUrl;
     private $apiKey;
+    private $inTransaction = false;
 
     public function __construct($apiUrl, $apiKey)
     {
         $this->apiUrl = rtrim($apiUrl, '/') . '/';
         $this->apiKey = $apiKey;
+    }
+
+    public function beginTransaction()
+    {
+        $this->inTransaction = true;
+        return true;
+    }
+
+    public function commit()
+    {
+        $this->inTransaction = false;
+        return true;
+    }
+
+    public function rollBack()
+    {
+        $this->inTransaction = false;
+        return true;
+    }
+
+    public function inTransaction()
+    {
+        return $this->inTransaction;
     }
 
     public function prepare($sql)
