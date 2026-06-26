@@ -64,11 +64,13 @@ try {
         exit;
     }
 
-    $code = strtoupper(substr(preg_replace('/[^a-zA-Z0-9]/', '', $businessName), 0, 4)) . '-' . str_pad(random_int(0, 99999), 5, '0', STR_PAD_LEFT);
+    $prefix = strtoupper(substr(preg_replace('/[^a-zA-Z0-9]/', '', $businessName), 0, 4));
+    if ($prefix === '') $prefix = 'TASK';
+    $code = $prefix . '-' . str_pad(random_int(0, 99999), 5, '0', STR_PAD_LEFT);
     $existingCode = $db->prepare('SELECT id FROM businesses WHERE business_code = :code');
     $existingCode->execute([':code' => $code]);
     while ($existingCode->fetch()) {
-        $code = strtoupper(substr(preg_replace('/[^a-zA-Z0-9]/', '', $businessName), 0, 4)) . '-' . str_pad(random_int(0, 99999), 5, '0', STR_PAD_LEFT);
+        $code = $prefix . '-' . str_pad(random_int(0, 99999), 5, '0', STR_PAD_LEFT);
         $existingCode->execute([':code' => $code]);
     }
 
@@ -134,9 +136,9 @@ try {
 } catch (PDOException $e) {
     if (isset($db) && $db->inTransaction()) $db->rollBack();
     http_response_code(500);
-    echo json_encode(['success' => false, 'message' => 'Database error: ' . $e->getMessage()]);
+    echo json_encode(['success' => false, 'message' => 'A database error occurred. Please try again.']);
 } catch (\Throwable $e) {
     if (isset($db) && $db->inTransaction()) $db->rollBack();
     http_response_code(500);
-    echo json_encode(['success' => false, 'message' => 'Error: ' . $e->getMessage()]);
+    echo json_encode(['success' => false, 'message' => 'An unexpected error occurred. Please try again.']);
 }

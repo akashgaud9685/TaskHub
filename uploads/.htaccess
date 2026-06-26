@@ -1,9 +1,22 @@
 Options -Indexes
-# Allow only image files
-<FilesMatch "\.(jpg|jpeg|png|gif|webp)$">
-    Order Allow,Deny
-    Allow from all
-</FilesMatch>
-<FilesMatch "\.(php|phtml|php3|php4|php5|phps)$">
-    Deny from all
-</FilesMatch>
+
+# Apache 2.2
+<IfModule !mod_authz_core.c>
+    <FilesMatch "\.(jpg|jpeg|png|gif|webp)$">
+        Order Allow,Deny
+        Allow from all
+    </FilesMatch>
+    <FilesMatch "\.(php|phtml|php3|php4|php5|phps)$">
+        Deny from all
+    </FilesMatch>
+</IfModule>
+
+# Apache 2.4+
+<IfModule mod_authz_core.c>
+    <FilesMatch "\.(jpg|jpeg|png|gif|webp)$">
+        Require all granted
+    </FilesMatch>
+    <FilesMatch "\.(php|phtml|php3|php4|php5|phps)$">
+        Require all denied
+    </FilesMatch>
+</IfModule>
