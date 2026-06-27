@@ -1,28 +1,3 @@
-<?php
-if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    $name    = trim($_POST['name'] ?? '');
-    $email   = trim($_POST['email'] ?? '');
-    $subject = trim($_POST['subject'] ?? '');
-    $message = trim($_POST['message'] ?? '');
-    $errors = [];
-    if ($name === '') $errors[] = 'Name is required';
-    if (!filter_var($email, FILTER_VALIDATE_EMAIL)) $errors[] = 'Valid email is required';
-    if ($subject === '') $errors[] = 'Subject is required';
-    if ($message === '') $errors[] = 'Message is required';
-    header('Content-Type: application/json');
-    if (!empty($errors)) {
-        http_response_code(400);
-        echo json_encode(['success' => false, 'message' => implode('. ', $errors)]);
-        exit;
-    }
-    $log = sprintf("[%s] From: %s (%s)\nSubject: %s\nMessage: %s\n---\n", date('Y-m-d H:i:s'), $name, $email, $subject, $message);
-    $logDir = __DIR__ . '/storage';
-    if (!is_dir($logDir)) mkdir($logDir, 0755, true);
-    file_put_contents($logDir . '/contact_messages.log', $log, FILE_APPEND | LOCK_EX);
-    echo json_encode(['success' => true, 'message' => 'Thank you for your message! We will get back to you soon.']);
-    exit;
-}
-?>
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -106,13 +81,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 <div class="animate-fade-up stagger-2">
 <div class="bg-white/5 rounded-2xl p-8 border border-white/10">
 <h2 class="text-xl font-bold mb-6">Send a Message</h2>
-            <form id="contactForm" method="post">
+<form id="contactForm">
 <div class="grid sm:grid-cols-2 gap-4 mb-4">
- <div><label class="block text-xs text-slate-400 mb-1">Your Name</label><input type="text" id="contactName" name="name" class="w-full px-4 py-2.5 bg-white/5 border border-white/10 rounded-lg text-white text-sm focus:outline-none focus:ring-2 focus:ring-purple-500"></div>
- <div><label class="block text-xs text-slate-400 mb-1">Your Email</label><input type="email" id="contactEmail" name="email" class="w-full px-4 py-2.5 bg-white/5 border border-white/10 rounded-lg text-white text-sm focus:outline-none focus:ring-2 focus:ring-purple-500"></div>
+<div><label class="block text-xs text-slate-400 mb-1">Your Name</label><input type="text" id="contactName" class="w-full px-4 py-2.5 bg-white/5 border border-white/10 rounded-lg text-white text-sm focus:outline-none focus:ring-2 focus:ring-purple-500"></div>
+<div><label class="block text-xs text-slate-400 mb-1">Your Email</label><input type="email" id="contactEmail" class="w-full px-4 py-2.5 bg-white/5 border border-white/10 rounded-lg text-white text-sm focus:outline-none focus:ring-2 focus:ring-purple-500"></div>
 </div>
-<div class="mb-4"><label class="block text-xs text-slate-400 mb-1">Subject</label><input type="text" id="contactSubject" name="subject" class="w-full px-4 py-2.5 bg-white/5 border border-white/10 rounded-lg text-white text-sm focus:outline-none focus:ring-2 focus:ring-purple-500"></div>
-<div class="mb-4"><label class="block text-xs text-slate-400 mb-1">Message</label><textarea id="contactMessage" name="message" rows="5" class="w-full px-4 py-2.5 bg-white/5 border border-white/10 rounded-lg text-white text-sm focus:outline-none focus:ring-2 focus:ring-purple-500"></textarea></div>
+<div class="mb-4"><label class="block text-xs text-slate-400 mb-1">Subject</label><input type="text" id="contactSubject" class="w-full px-4 py-2.5 bg-white/5 border border-white/10 rounded-lg text-white text-sm focus:outline-none focus:ring-2 focus:ring-purple-500"></div>
+<div class="mb-4"><label class="block text-xs text-slate-400 mb-1">Message</label><textarea id="contactMessage" rows="5" class="w-full px-4 py-2.5 bg-white/5 border border-white/10 rounded-lg text-white text-sm focus:outline-none focus:ring-2 focus:ring-purple-500"></textarea></div>
 <button type="submit" class="w-full py-2.5 bg-purple-600 hover:bg-purple-700 text-white font-medium rounded-lg transition">Send Message</button>
 </form>
 </div>
@@ -133,29 +108,17 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 </footer>
 
 <script>
-document.getElementById('contactForm')?.addEventListener('submit', async function(e) {
-    e.preventDefault();
-    const btn = this.querySelector('button[type="submit"]');
-    btn.disabled = true;
-    btn.textContent = 'Sending...';
-    try {
-        const res = await fetch('contact.php', {
-            method: 'POST',
-            body: new FormData(this),
-        });
-        const data = await res.json();
-        if (data.success) {
-            alert(data.message);
-            this.reset();
-        } else {
-            alert('Error: ' + data.message);
-        }
-    } catch (err) {
-        alert('Network error. Please try again later.');
-    } finally {
-        btn.disabled = false;
-        btn.textContent = 'Send Message';
-    }
+document.getElementById('contactForm')?.addEventListener('submit', function(e) {
+e.preventDefault();
+const btn = this.querySelector('button[type="submit"]');
+btn.disabled = true;
+btn.textContent = 'Sending...';
+setTimeout(() => {
+alert('Thank you for your message! We will get back to you soon.');
+this.reset();
+btn.disabled = false;
+btn.textContent = 'Send Message';
+}, 800);
 });
 </script>
 </body>

@@ -13,19 +13,18 @@ try {
     $db = getBizDB();
     $bizId = !empty($_SESSION['business_id']) ? (int)$_SESSION['business_id'] : null;
 
+    $totalStaff = $db->prepare("SELECT COUNT(*) FROM users WHERE role = :role" . ($bizId ? " AND business_id = :bid" : ''));
+    $params = [':role' => 'staff'];
+    if ($bizId) $params[':bid'] = $bizId;
+    $totalStaff->execute($params);
+    $totalStaff = $totalStaff->fetchColumn();
+
     if ($bizId) {
-        $st = $db->prepare("SELECT COUNT(*) FROM users WHERE role = 'staff' AND business_id = :bid");
-        $st->execute([':bid' => $bizId]); $totalStaff = $st->fetchColumn();
-        $st = $db->prepare("SELECT COUNT(*) FROM tasks t JOIN users u ON t.assigned_to = u.id WHERE u.business_id = :bid");
-        $st->execute([':bid' => $bizId]); $totalTasks = $st->fetchColumn();
-        $st = $db->prepare("SELECT COUNT(*) FROM tasks t JOIN users u ON t.assigned_to = u.id WHERE t.status = 'todo' AND u.business_id = :bid");
-        $st->execute([':bid' => $bizId]); $pending = $st->fetchColumn();
-        $st = $db->prepare("SELECT COUNT(*) FROM tasks t JOIN users u ON t.assigned_to = u.id WHERE t.status = 'in-progress' AND u.business_id = :bid");
-        $st->execute([':bid' => $bizId]); $inProgress = $st->fetchColumn();
-        $st = $db->prepare("SELECT COUNT(*) FROM tasks t JOIN users u ON t.assigned_to = u.id WHERE t.status = 'completed' AND u.business_id = :bid");
-        $st->execute([':bid' => $bizId]); $completed = $st->fetchColumn();
+        $totalTasks = $db->prepare("SELECT COUNT(*) FROM tasks t JOIN users u ON t.assigned_to = u.id WHERE u.business_id = :bid")->execute([':bid' => $bizId])->fetchColumn();
+        $pending = $db->prepare("SELECT COUNT(*) FROM tasks t JOIN users u ON t.assigned_to = u.id WHERE t.status = 'todo' AND u.business_id = :bid")->execute([':bid' => $bizId])->fetchColumn();
+        $inProgress = $db->prepare("SELECT COUNT(*) FROM tasks t JOIN users u ON t.assigned_to = u.id WHERE t.status = 'in-progress' AND u.business_id = :bid")->execute([':bid' => $bizId])->fetchColumn();
+        $completed = $db->prepare("SELECT COUNT(*) FROM tasks t JOIN users u ON t.assigned_to = u.id WHERE t.status = 'completed' AND u.business_id = :bid")->execute([':bid' => $bizId])->fetchColumn();
     } else {
-        $totalStaff = $db->query("SELECT COUNT(*) FROM users WHERE role = 'staff'")->fetchColumn();
         $totalTasks = $db->query("SELECT COUNT(*) FROM tasks")->fetchColumn();
         $pending = $db->query("SELECT COUNT(*) FROM tasks WHERE status = 'todo'")->fetchColumn();
         $inProgress = $db->query("SELECT COUNT(*) FROM tasks WHERE status = 'in-progress'")->fetchColumn();

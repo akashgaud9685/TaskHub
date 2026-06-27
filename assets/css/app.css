@@ -2,8 +2,6 @@
    TaskHub - Custom Styles (Dark/Light Theme)
    ============================================================ */
 
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
-
 * { font-family: 'Inter', system-ui, -apple-system, sans-serif; }
 
 /* ── Scrollbar ───────────────────────────────────── */
@@ -234,45 +232,7 @@ select option { background-color: var(--bg-input); color: var(--text-primary); }
     .task-card { padding: 0.75rem; }
 }
 
-/* ── Profile photo ───────────────────────────────── */
-#profilePhotoContainer img {
-    transition: opacity 0.3s;
-}
-
-/* ── Tab scroll fix ──────────────────────────────── */
-.tab-btn { flex-shrink: 0; }
-
-/* ── Disabled form fields ────────────────────────── */
 input:disabled, select:disabled, textarea:disabled {
     opacity: 0.5;
     cursor: not-allowed;
-}
-
-/* ── Profile dropdown ───────────────────────────── */
-#profileDropdownMenu {
-    backdrop-filter: blur(16px);
-}
-#profileDropdownMenu::before {
-    content: '';
-    position: absolute;
-    top: -4px;
-    right: 16px;
-    width: 10px;
-    height: 10px;
-    background: var(--bg-page);
-    border-left: 1px solid var(--border-color);
-    border-top: 1px solid var(--border-color);
-    transform: rotate(45deg);
-}
-
-/* ── Password peek ──────────────────────────────── */
-#peekPassword {
-    transition: opacity 0.2s;
-}
-
-/* ── Note modal ─────────────────────────────────── */
-#noteModalContent {
-    max-height: 60vh;
-    overflow-y: auto;
-    line-height: 1.6;
 }

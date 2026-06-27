@@ -29,7 +29,7 @@ try {
 
 $userId = (int) $_SESSION['user_id'];
 
-$stmt = $db->prepare('SELECT id, name, username, email, password, role, department, status, photo, created_at FROM users WHERE id = :id');
+$stmt = $db->prepare('SELECT id, name, username, email, role, department, status, photo, created_at FROM users WHERE id = :id');
 $stmt->execute([':id' => $userId]);
 $user = $stmt->fetch();
 
@@ -279,7 +279,7 @@ if (!empty($_SESSION['business_id'])) {
         </div>
     </footer>
 
-    <script src="../assets/js/app.js"></script>
-    <script src="../assets/js/staff.js"></script>
+    <script defer src="../assets/js/app.js"></script>
+    <script defer src="../assets/js/staff.js"></script>
 </body>
 </html>

@@ -791,7 +791,7 @@ function escHtml(str) {
 }
 
 function escHtmlAttr(str) {
-    return (str || '').replace(/\\/g, '\\\\').replace(/'/g, "\\'").replace(/\n/g, '\\n').replace(/\r/g, '').replace(/\//g, '\\/').replace(/"/g, '&quot;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+    return (str || '').replace(/\\/g, '\\\\').replace(/'/g, "\\'").replace(/\n/g, '\\n').replace(/\r/g, '').replace(/\//g, '\\/');
 }
 
 // ─── INIT ────────────────────────────────────────────

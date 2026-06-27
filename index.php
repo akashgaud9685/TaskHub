@@ -9,7 +9,7 @@
 <link rel="icon" type="image/x-icon" href="favicon.ico">
 <script src="https://cdn.tailwindcss.com"></script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" media="print" onload="this.media='all'">
 <style>
 *{font-family:'Inter',sans-serif}
 html{scroll-behavior:smooth}
@@ -83,7 +83,82 @@ TaskHub is a powerful task management and workflow automation platform. Assign t
 <div class="relative animate-fade-up stagger-3">
 <div class="relative rounded-2xl overflow-hidden border border-white/10 bg-gradient-to-br from-purple-900/30 to-slate-800/30 p-2">
 <div class="rounded-xl overflow-hidden">
-<img src="assets/images/dashboard-preview.svg" alt="TaskHub Dashboard Preview" class="w-full">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 600" fill="none" class="w-full" alt="TaskHub Dashboard Preview">
+  <rect width="800" height="600" rx="12" fill="#0f172a"/>
+  <rect x="0" y="0" width="200" height="600" fill="#1e293b" rx="12"/>
+  <rect x="16" y="16" width="168" height="32" rx="8" fill="#334155"/>
+  <circle cx="36" cy="32" r="10" fill="#a855f7"/>
+  <rect x="52" y="26" width="60" height="12" rx="4" fill="#475569"/>
+  <rect x="16" y="64" width="168" height="2" fill="#334155"/>
+  <rect x="16" y="80" width="168" height="36" rx="6" fill="#334155" opacity="0.5"/>
+  <rect x="16" y="124" width="168" height="36" rx="6" fill="#334155" opacity="0.5"/>
+  <rect x="16" y="168" width="168" height="36" rx="6" fill="#a855f7" opacity="0.15"/>
+  <circle cx="36" cy="186" r="6" fill="#a855f7"/>
+  <rect x="48" y="180" width="90" height="12" rx="4" fill="#a855f7" opacity="0.6"/>
+  <rect x="16" y="212" width="168" height="36" rx="6" fill="#334155" opacity="0.5"/>
+  <rect x="16" y="256" width="168" height="36" rx="6" fill="#334155" opacity="0.5"/>
+  <rect x="16" y="300" width="168" height="36" rx="6" fill="#334155" opacity="0.5"/>
+  <rect x="16" y="540" width="168" height="44" rx="8" fill="#334155"/>
+  <circle cx="36" cy="562" r="14" fill="#475569"/>
+  <rect x="56" y="554" width="80" height="8" rx="4" fill="#475569"/>
+  <rect x="56" y="566" width="60" height="6" rx="3" fill="#334155"/>
+  <rect x="216" y="16" width="568" height="56" rx="12" fill="#1e293b"/>
+  <rect x="232" y="32" width="120" height="24" rx="6" fill="#334155"/>
+  <circle cx="740" cy="44" r="16" fill="#334155"/>
+  <circle cx="708" cy="44" r="10" fill="#a855f7"/>
+  <rect x="216" y="84" width="132" height="80" rx="10" fill="#1e293b"/>
+  <rect x="228" y="96" width="40" height="8" rx="4" fill="#475569"/>
+  <rect x="228" y="112" width="80" height="22" rx="4" fill="#a855f7"/>
+  <rect x="228" y="142" width="60" height="6" rx="3" fill="#334155"/>
+  <rect x="360" y="84" width="132" height="80" rx="10" fill="#1e293b"/>
+  <rect x="372" y="96" width="40" height="8" rx="4" fill="#475569"/>
+  <rect x="372" y="112" width="80" height="22" rx="4" fill="#06b6d4"/>
+  <rect x="372" y="142" width="60" height="6" rx="3" fill="#334155"/>
+  <rect x="504" y="84" width="132" height="80" rx="10" fill="#1e293b"/>
+  <rect x="516" y="96" width="40" height="8" rx="4" fill="#475569"/>
+  <rect x="516" y="112" width="80" height="22" rx="4" fill="#10b981"/>
+  <rect x="516" y="142" width="60" height="6" rx="3" fill="#334155"/>
+  <rect x="648" y="84" width="136" height="80" rx="10" fill="#1e293b"/>
+  <rect x="660" y="96" width="40" height="8" rx="4" fill="#475569"/>
+  <rect x="660" y="112" width="80" height="22" rx="4" fill="#f59e0b"/>
+  <rect x="660" y="142" width="60" height="6" rx="3" fill="#334155"/>
+  <rect x="216" y="176" width="372" height="200" rx="10" fill="#1e293b"/>
+  <rect x="232" y="192" width="100" height="10" rx="4" fill="#475569"/>
+  <rect x="232" y="220" width="340" height="140" rx="6" fill="#1e293b"/>
+  <path d="M240 320 L280 280 L320 300 L360 240 L400 260 L440 200 L480 220 L520 180 L560 200" stroke="#a855f7" stroke-width="3" stroke-linecap="round" fill="none"/>
+  <path d="M240 320 L280 300 L320 310 L360 270 L400 280 L440 240 L480 260 L520 220 L560 240" stroke="#06b6d4" stroke-width="2" stroke-linecap="round" fill="none" opacity="0.5"/>
+  <circle cx="440" cy="200" r="5" fill="#a855f7"/>
+  <rect x="600" y="176" width="184" height="200" rx="10" fill="#1e293b"/>
+  <rect x="616" y="192" width="100" height="10" rx="4" fill="#475569"/>
+  <rect x="616" y="216" width="152" height="12" rx="4" fill="#334155"/>
+  <rect x="616" y="236" width="120" height="10" rx="4" fill="#475569"/>
+  <rect x="616" y="260" width="152" height="12" rx="4" fill="#334155"/>
+  <rect x="616" y="280" width="100" height="10" rx="4" fill="#475569"/>
+  <rect x="616" y="304" width="152" height="12" rx="4" fill="#334155"/>
+  <rect x="616" y="324" width="90" height="10" rx="4" fill="#475569"/>
+  <circle cx="632" cy="222" r="4" fill="#10b981"/>
+  <circle cx="632" cy="266" r="4" fill="#f59e0b"/>
+  <circle cx="632" cy="310" r="4" fill="#10b981"/>
+  <rect x="216" y="388" width="568" height="148" rx="10" fill="#1e293b"/>
+  <rect x="232" y="404" width="100" height="10" rx="4" fill="#475569"/>
+  <rect x="232" y="428" width="536" height="1" fill="#334155"/>
+  <rect x="232" y="444" width="120" height="10" rx="4" fill="#334155"/>
+  <rect x="400" y="444" width="80" height="10" rx="4" fill="#334155"/>
+  <rect x="540" y="444" width="60" height="10" rx="4" fill="#334155"/>
+  <rect x="660" y="444" width="100" height="10" rx="4" fill="#334155"/>
+  <rect x="232" y="470" width="120" height="10" rx="4" fill="#475569"/>
+  <rect x="400" y="470" width="80" height="10" rx="4" fill="#475569"/>
+  <rect x="540" y="470" width="60" height="10" rx="4" fill="#a855f7"/>
+  <rect x="660" y="470" width="100" height="10" rx="4" fill="#475569"/>
+  <rect x="232" y="494" width="120" height="10" rx="4" fill="#475569"/>
+  <rect x="400" y="494" width="80" height="10" rx="4" fill="#475569"/>
+  <rect x="540" y="494" width="60" height="10" rx="4" fill="#10b981"/>
+  <rect x="660" y="494" width="100" height="10" rx="4" fill="#475569"/>
+  <rect x="232" y="518" width="120" height="10" rx="4" fill="#475569"/>
+  <rect x="400" y="518" width="80" height="10" rx="4" fill="#475569"/>
+  <rect x="540" y="518" width="60" height="10" rx="4" fill="#f59e0b"/>
+  <rect x="660" y="518" width="100" height="10" rx="4" fill="#475569"/>
+</svg>
 </div>
 </div>
 <div class="absolute -bottom-6 -left-6 w-32 h-32 rounded-2xl bg-purple-600/20 border border-purple-500/30 backdrop-blur-xl flex items-center justify-center animate-float">

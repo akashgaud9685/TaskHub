@@ -81,7 +81,7 @@ try {
                 ':password'   => $hashed,
                 ':department' => $department,
                 ':status'     => $status,
-                ':email'      => $username . '@' . ($bizName ? preg_replace('/[^a-zA-Z0-9]/', '', strtolower($bizName)) : 'taskhub') . '.local',
+                ':email'      => $username . '@taskhub.local',
                 ':bid'        => $bizId,
                 ':bn'         => $bizName,
             ]);

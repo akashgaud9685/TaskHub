@@ -10,6 +10,7 @@ class SupabaseStatement
     private $rowCount = 0;
     private $tableName = '';
     private $operation = '';
+    private static $requestCache = [];
 
     public function __construct($pdo, $sql)
     {
@@ -29,8 +30,20 @@ class SupabaseStatement
     {
         if ($params !== null) $this->params = $params;
         try {
+            $cacheKey = $this->sql . '|' . json_encode($this->params);
+            if ($this->operation === 'SELECT' && isset(self::$requestCache[$cacheKey])) {
+                $this->result = self::$requestCache[$cacheKey];
+                $this->rowIndex = 0;
+                return true;
+            }
+            if (in_array($this->operation, ['INSERT', 'UPDATE', 'DELETE'])) {
+                self::$requestCache = [];
+            }
             $this->result = $this->doRequest();
             $this->rowIndex = 0;
+            if ($this->operation === 'SELECT') {
+                self::$requestCache[$cacheKey] = $this->result;
+            }
             return true;
         } catch (Exception $e) {
             throw $e;
@@ -236,9 +249,6 @@ class SupabaseStatement
                 throw new RuntimeException('Unsupported SQL: ' . $this->operation);
         }
 
-        if (!function_exists('curl_init')) {
-            throw new RuntimeException('cURL extension is required but not installed');
-        }
         $ch = curl_init();
         $headers = [
             'apikey: ' . $apiKey,
@@ -258,10 +268,9 @@ class SupabaseStatement
             CURLOPT_URL => $url,
             CURLOPT_RETURNTRANSFER => true,
             CURLOPT_HTTPHEADER => $headers,
-            CURLOPT_TIMEOUT => 30,
+            CURLOPT_TIMEOUT => 8,
+            CURLOPT_CONNECTTIMEOUT => 5,
             CURLOPT_SSL_VERIFYPEER => true,
-            CURLOPT_SSL_VERIFYSTATUS => false,
-            CURLOPT_USERAGENT => 'TaskHub/1.0',
         ]);
 
         if ($method === 'POST') {
@@ -287,33 +296,9 @@ class SupabaseStatement
         $response = curl_exec($ch);
         $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
         $error = curl_error($ch);
-        $sslError = strpos($error, 'SSL') !== false;
         curl_close($ch);
 
-        if ($error) {
-            if ($sslError) {
-                $ch = curl_init();
-                curl_setopt_array($ch, [
-                    CURLOPT_URL => $url,
-                    CURLOPT_RETURNTRANSFER => true,
-                    CURLOPT_HTTPHEADER => $headers,
-                    CURLOPT_TIMEOUT => 30,
-                    CURLOPT_SSL_VERIFYPEER => false,
-                    CURLOPT_SSL_VERIFYHOST => 0,
-                    CURLOPT_USERAGENT => 'TaskHub/1.0',
-                ]);
-                if ($method === 'POST') { curl_setopt($ch, CURLOPT_POST, true); if ($jsonBody) curl_setopt($ch, CURLOPT_POSTFIELDS, $jsonBody); }
-                elseif ($method === 'PATCH') { curl_setopt($ch, CURLOPT_CUSTOMREQUEST, 'PATCH'); if ($jsonBody) curl_setopt($ch, CURLOPT_POSTFIELDS, $jsonBody); }
-                elseif ($method === 'DELETE') { curl_setopt($ch, CURLOPT_CUSTOMREQUEST, 'DELETE'); }
-                $response = curl_exec($ch);
-                $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
-                $error = curl_error($ch);
-                curl_close($ch);
-                if ($error) throw new RuntimeException('cURL error: ' . $error);
-            } else {
-                throw new RuntimeException('cURL error: ' . $error);
-            }
-        }
+        if ($error) throw new RuntimeException('cURL error: ' . $error);
 
         // Success
         if (in_array($httpCode, [200, 201, 204, 206])) {
@@ -333,26 +318,6 @@ class SupabaseStatement
                 return [$decoded];
             }
             return [];
-        }
-
-        // 406 retry
-        if ($httpCode === 406) {
-            $ch = curl_init();
-            curl_setopt_array($ch, [
-                CURLOPT_URL => $url,
-                CURLOPT_RETURNTRANSFER => true,
-                CURLOPT_HTTPHEADER => ['apikey: ' . $apiKey, 'Authorization: Bearer ' . $apiKey, 'Accept: application/json'],
-                CURLOPT_TIMEOUT => 30,
-            ]);
-            $response = curl_exec($ch);
-            $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
-            curl_close($ch);
-            if ($httpCode === 200) {
-                $decoded = json_decode($response, true);
-                if (!is_array($decoded)) return [];
-                $this->rowCount = count($decoded);
-                return isset($decoded[0]) ? $decoded : [$decoded];
-            }
         }
 
         $msg = json_decode($response, true);
@@ -396,7 +361,8 @@ class SupabaseStatement
             CURLOPT_URL => $url,
             CURLOPT_RETURNTRANSFER => true,
             CURLOPT_HTTPHEADER => ['apikey: ' . $apiKey, 'Authorization: Bearer ' . $apiKey, 'Accept: application/json'],
-            CURLOPT_TIMEOUT => 20,
+            CURLOPT_TIMEOUT => 8,
+            CURLOPT_CONNECTTIMEOUT => 5,
         ]);
         $response = curl_exec($ch);
         $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
@@ -430,35 +396,11 @@ class SupabasePDO
 {
     private $apiUrl;
     private $apiKey;
-    private $inTransaction = false;
 
     public function __construct($apiUrl, $apiKey)
     {
         $this->apiUrl = rtrim($apiUrl, '/') . '/';
         $this->apiKey = $apiKey;
-    }
-
-    public function beginTransaction()
-    {
-        $this->inTransaction = true;
-        return true;
-    }
-
-    public function commit()
-    {
-        $this->inTransaction = false;
-        return true;
-    }
-
-    public function rollBack()
-    {
-        $this->inTransaction = false;
-        return true;
-    }
-
-    public function inTransaction()
-    {
-        return $this->inTransaction;
     }
 
     public function prepare($sql)

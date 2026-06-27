@@ -7,6 +7,8 @@
 <meta name="description" content="Register your business on TaskHub and start managing tasks, tracking work, and boosting team productivity.">
 <link rel="icon" type="image/x-icon" href="favicon.ico">
 <script src="https://cdn.tailwindcss.com"></script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" media="print" onload="this.media='all'">
 <link rel="stylesheet" href="assets/css/app.css">
 <style>
 *{font-family:'Inter',sans-serif}

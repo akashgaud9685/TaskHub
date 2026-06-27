@@ -56,7 +56,7 @@ try {
                 exit;
             }
 
-            $check = $db->prepare('SELECT wl.id, wl.business_id FROM work_logs wl WHERE wl.id = :wid');
+            $check = $db->prepare('SELECT wl.id, u.business_id FROM work_logs wl JOIN users u ON u.id = wl.staff_id WHERE wl.id = :wid');
             $check->execute([':wid' => $workLogId]);
             $workLog = $check->fetch();
 

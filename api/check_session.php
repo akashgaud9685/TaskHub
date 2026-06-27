@@ -1,5 +1,4 @@
 <?php
-require_once __DIR__ . '/../config/database.php';
 header('Content-Type: application/json');
 
 session_start();
@@ -15,6 +14,8 @@ if (($now - $lastCheck) < 30) {
     echo json_encode(['valid' => true]);
     exit;
 }
+
+require_once __DIR__ . '/../config/database.php';
 
 try {
     $db = getBizDB();
