@@ -75,6 +75,7 @@ if (!empty($_SESSION['business_id'])) {
                 </div>
                 <div class="flex items-center gap-1 sm:gap-3 flex-wrap justify-end">
                     <button onclick="toggleTheme()" class="theme-toggle" title="Toggle theme"></button>
+
                     <!-- Profile Dropdown Trigger -->
                     <div class="relative" id="profileDropdownWrapper">
                         <button onclick="toggleProfileDropdown()" class="w-9 h-9 rounded-full overflow-hidden border-2 border-purple-500/50 flex items-center justify-center bg-[var(--bg-input)] cursor-pointer hover:opacity-80 transition flex-shrink-0" id="profileTrigger">
@@ -175,6 +176,46 @@ if (!empty($_SESSION['business_id'])) {
             </div>
         </div>
 
+    </div>
+
+    <!-- ─── PROGRESS MODAL ───────────────────────── -->
+    <div id="progressModal" class="fixed inset-0 z-50 hidden flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
+        <div class="rounded-2xl p-6 max-w-lg w-full shadow-2xl border" style="background:var(--bg-page); border-color:var(--border-color);">
+            <div class="flex items-center justify-between mb-4">
+                <h3 class="text-lg font-semibold">Update Progress</h3>
+                <button onclick="closeProgressModal()" class="text-[var(--text-secondary)] hover:text-[var(--text-primary)] transition text-2xl leading-none">&times;</button>
+            </div>
+            <p class="text-sm text-[var(--text-secondary)] mb-3">Task: <span id="progressTaskTitle" class="text-white font-medium"></span></p>
+            <form id="progressForm" class="space-y-4">
+                <input type="hidden" id="progressTaskId" value="">
+                <div>
+                    <label class="block text-xs text-[var(--text-secondary)] mb-1">What have you done so far? <span class="text-red-400">*</span></label>
+                    <textarea id="progressMessage" rows="3" placeholder="Describe your progress..." required class="w-full"></textarea>
+                </div>
+                <div class="flex justify-end gap-3">
+                    <button type="button" onclick="closeProgressModal()" class="btn-ghost">Cancel</button>
+                    <button type="submit" class="btn-primary">Send Update</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- ─── VIEW PROGRESS MODAL ──────────────────── -->
+    <div id="viewProgressModal" class="fixed inset-0 z-50 hidden flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
+        <div class="rounded-2xl p-6 max-w-2xl w-full shadow-2xl border max-h-[90vh] overflow-y-auto" style="background:var(--bg-page); border-color:var(--border-color);">
+            <div class="flex items-center justify-between mb-4">
+                <h3 class="text-lg font-semibold">Work Progress History <span class="text-xs text-emerald-500 font-normal ml-2">● Live</span></h3>
+                <button onclick="closeViewProgressModal()" class="text-[var(--text-secondary)] hover:text-[var(--text-primary)] transition text-2xl leading-none">&times;</button>
+            </div>
+            <div id="viewProgressContent" class="space-y-3 mb-4 min-h-[80px]">
+                <p class="text-center text-[var(--text-muted)] py-4">Loading...</p>
+            </div>
+            <input type="hidden" id="viewProgressTaskId" value="">
+            <form id="viewProgressReplyForm" class="flex gap-3 pt-3 border-t" style="border-color:var(--border-color);">
+                <textarea id="viewProgressReplyMessage" rows="2" placeholder="Reply to admin..." required class="w-full text-sm"></textarea>
+                <button type="submit" class="btn-primary text-sm whitespace-nowrap self-end">Send</button>
+            </form>
+        </div>
     </div>
 
     <!-- ─── WORK LOG MODAL ────────────────────────── -->

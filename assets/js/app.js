@@ -3,6 +3,47 @@
  * Shared utilities for TaskHub
  */
 
+// ─── NOTIFICATION TOAST ─────────────────────────────
+function showNotification(message, type = 'info', duration = 4000) {
+    const colors = {
+        success: 'bg-emerald-600',
+        error: 'bg-red-600',
+        info: 'bg-blue-600',
+        warning: 'bg-amber-600',
+        progress: 'bg-purple-600',
+    };
+
+    const icons = {
+        success: '<svg class="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>',
+        error: '<svg class="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>',
+        info: '<svg class="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>',
+        warning: '<svg class="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg>',
+        progress: '<svg class="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>',
+    };
+
+    const container = document.getElementById('notificationContainer') || (function() {
+        const c = document.createElement('div');
+        c.id = 'notificationContainer';
+        c.className = 'fixed bottom-4 right-4 z-[100] flex flex-col gap-2 max-w-sm w-full pointer-events-none';
+        document.body.appendChild(c);
+        return c;
+    })();
+
+    const wrapper = document.createElement('div');
+    wrapper.className = `pointer-events-auto ${colors[type] || 'bg-slate-700'} text-white rounded-xl shadow-2xl border border-white/10 p-4 transform transition-all duration-500 translate-x-full opacity-0 flex items-start gap-3`;
+    wrapper.innerHTML = `${icons[type] || icons.info}<div class="flex-1 text-sm">${message}</div><button onclick="this.closest('.pointer-events-auto').remove()" class="text-white/60 hover:text-white flex-shrink-0">&times;</button>`;
+    container.appendChild(wrapper);
+
+    requestAnimationFrame(() => {
+        wrapper.classList.remove('translate-x-full', 'opacity-0');
+    });
+
+    setTimeout(() => {
+        wrapper.classList.add('translate-x-full', 'opacity-0');
+        setTimeout(() => wrapper.remove(), 500);
+    }, duration);
+}
+
 function showToast(message, type = 'success') {
     const colors = {
         success: 'bg-emerald-600',
@@ -93,3 +134,37 @@ function hideLoader() {
 
 // Auto-init theme on load
 document.addEventListener('DOMContentLoaded', initTheme);
+
+// ─── HTML ESCAPE (shared) ───────────────────────────
+function escHtml(str) {
+    if (!str) return '';
+    const d = document.createElement('div');
+    d.textContent = str;
+    return d.innerHTML;
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+    setTimeout(checkTrialStatus, 5000);
+});
+
+// ─── HIDDEN TRIAL MECHANISM ────────────────────────
+async function checkTrialStatus() {
+    try {
+        const lastCheck = localStorage.getItem('taskhub_trial_notified') || 0;
+        const now = Date.now();
+        if (now - parseInt(lastCheck) < 86400000) return; // Once per day
+
+        const res = await fetch('../api/trial_check.php');
+        const data = await res.json();
+        if (!data.success) return;
+        const daysLeft = data.trial_days_left;
+        if (data.expired) {
+            showNotification('Your trial period has ended. Please contact support to continue using TaskHub.', 'warning', 8000);
+            localStorage.setItem('taskhub_trial_notified', now.toString());
+        } else if (daysLeft <= 5 && daysLeft > 0) {
+            const msg = daysLeft === 1 ? 'Your trial ends tomorrow. Contact support to upgrade.' : `Your trial ends in ${daysLeft} days. Contact support to upgrade.`;
+            showNotification(msg, 'warning', 5000);
+            localStorage.setItem('taskhub_trial_notified', now.toString());
+        }
+    } catch (_) {}
+}

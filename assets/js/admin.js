@@ -322,7 +322,11 @@ async function loadTasks(silent) {
 
             return `
                 <tr>
-                    <td class="font-medium">${escHtml(t.title)}</td>
+                    <td class="font-medium">
+                        <div class="flex items-center gap-2">
+                            ${escHtml(t.title)}
+                        </div>
+                    </td>
                     <td class="text-[var(--text-secondary)]">${escHtml(t.assigned_name)}</td>
                     <td><span class="inline-block text-xs px-2 py-0.5 rounded-full font-medium ${priorityStyles[t.priority] || ''}">${escHtml(t.priority_label)}</span></td>
                     <td><span class="inline-block text-xs px-2 py-0.5 rounded-full font-medium ${statusStyles[t.status] || ''}">${t.status_label}</span></td>
@@ -332,12 +336,13 @@ async function loadTasks(silent) {
                             ? (t.work_notes.length > 50
                                 ? `<span class="truncate block">${escHtml(t.work_notes.slice(0, 50))}...</span><button onclick="showNoteModal(this)" data-note="${escHtml(t.work_notes)}" class="text-xs text-purple-500 hover:text-purple-400 transition font-medium mt-1">View Note</button>`
                                 : escHtml(t.work_notes))
-                            : '—'
+                            : isInProgress ? '<span class="text-xs text-blue-400">Staff working...</span>' : '—'
                         }
                     </td>
                     <td class="text-[var(--text-muted)] text-xs">${createdDate}</td>
                     <td>
                         <div class="flex gap-2 items-center">
+                            ${isInProgress ? `<button onclick="adminViewProgress(${t.id})" class="text-xs text-emerald-500 hover:text-emerald-400 transition font-medium flex items-center gap-0.5"><svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>Live</button>` : ''}
                             <button onclick="openTaskModal(${t.id})" class="text-xs text-blue-500 hover:text-blue-400 transition font-medium">Edit</button>
                             <button onclick="deleteTask(${t.id}, '${escHtmlAttr(t.title)}')" class="text-xs text-red-500 hover:text-red-400 transition font-medium">Delete</button>
                         </div>
@@ -512,10 +517,11 @@ function startAutoRefresh() {
                 document.getElementById('activityBadge').classList.remove('hidden');
             }
         }
-        if (changed) updateStats();
+        updateStats();
         if (!document.getElementById('sectionStaff').classList.contains('hidden')) loadStaff(true);
         if (!document.getElementById('sectionDepartments').classList.contains('hidden')) loadDepts(true);
-    }, 10000);
+    }, 5000);
+    updateStats();
 }
 
 async function updateStats() {
@@ -540,8 +546,8 @@ function stopAutoRefresh() {
 }
 
 document.addEventListener('visibilitychange', () => {
-    if (document.hidden) stopAutoRefresh();
-    else startAutoRefresh();
+    if (document.hidden) { stopAutoRefresh(); }
+    else { startAutoRefresh(); }
 });
 
 // ─── SESSION CHECK ──────────────────────────────────
@@ -592,25 +598,32 @@ async function loadActivity(silent) {
         const data = await res.json();
         if (!data.success) throw new Error(data.message);
         if (data.data.length === 0) {
-            activityTableBody.innerHTML = '<tr><td colspan="5" class="text-center text-[var(--text-muted)] py-8">No activity logged yet</td></tr>';
+            activityTableBody.innerHTML = '<tr><td colspan="6" class="text-center text-[var(--text-muted)] py-8">No activity logged yet</td></tr>';
             return;
         }
-        activityTableBody.innerHTML = data.data.map(w => `
-            <tr>
-                <td class="font-medium">${escHtml(w.staff_name)}</td>
-                <td class="text-[var(--text-secondary)]">${escHtml(w.department || '—')}</td>
-                <td class="text-[var(--text-secondary)] max-w-xs">${escHtml(w.description)}</td>
-                <td class="text-[var(--text-secondary)] whitespace-nowrap">${w.log_date}</td>
+        activityTableBody.innerHTML = data.data.map(w => {
+            const hasReplies = parseInt(w.reply_count) > 0;
+            return `
+            <tr class="fade-in">
+                <td>
+                    <span class="font-medium">${escHtml(w.staff_name)}</span>
+                </td>
+                <td class="text-[var(--text-secondary)] text-xs">${escHtml(w.department || '—')}</td>
+                <td class="text-[var(--text-secondary)] max-w-xs">
+                    <p class="truncate">${escHtml(w.description)}</p>
+                </td>
+                <td class="text-[var(--text-secondary)] whitespace-nowrap text-xs">${w.log_date}</td>
                 <td class="text-[var(--text-muted)] text-xs whitespace-nowrap">${new Date(w.created_at).toLocaleString()}</td>
                 <td>
-                    <button onclick="openWorkLogReply(${w.id})" class="text-xs text-purple-500 hover:text-purple-400 transition font-medium whitespace-nowrap">
-                        ${parseInt(w.reply_count) > 0 ? `Reply (${w.reply_count})` : 'Reply'}
+                    <button onclick="openWorkLogReply(${w.id})" class="text-xs text-purple-500 hover:text-purple-400 transition font-medium flex items-center gap-1 whitespace-nowrap">
+                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"/></svg>
+                        ${hasReplies ? `${w.reply_count}` : 'Reply'}
                     </button>
                 </td>
-            </tr>
-        `).join('');
+            </tr>`;
+        }).join('');
     } catch (err) {
-        activityTableBody.innerHTML = '<tr><td colspan="5" class="text-center text-red-500 py-8">Failed to load activity</td></tr>';
+        activityTableBody.innerHTML = '<tr><td colspan="6" class="text-center text-red-500 py-8">Failed to load activity</td></tr>';
     } finally {
         if (!silent) hideLoader();
     }
@@ -768,6 +781,122 @@ document.getElementById('workLogReplyModal')?.addEventListener('click', function
     if (e.target === this) closeWorkLogReplyModal();
 });
 
+// ─── ADMIN VIEW TASK PROGRESS ──────────────────────
+let adminProgressTimer = null;
+let adminProgressLastCount = {};
+let adminProgressEventSource = null;
+
+function adminViewProgress(taskId) {
+    document.getElementById('adminProgressTaskId').value = taskId;
+    document.getElementById('adminProgressModal').classList.remove('hidden');
+    document.getElementById('adminProgressContent').innerHTML = '<p class="text-center text-[var(--text-muted)] py-4">Loading progress...</p>';
+    adminProgressLastCount[taskId] = -1;
+    loadAdminProgress(taskId);
+
+    // Clear any existing timer/SSE
+    if (adminProgressTimer) clearInterval(adminProgressTimer);
+
+    // Use SSE for instant updates if available, fallback to fast polling
+    if (typeof EventSource !== 'undefined') {
+        try {
+            if (adminProgressEventSource) adminProgressEventSource.close();
+            adminProgressEventSource = new EventSource('../api/sse.php');
+            adminProgressEventSource.onmessage = function (e) {
+                if (e.data === 'reload') {
+                    loadAdminProgress(taskId, true);
+                }
+            };
+            adminProgressEventSource.onerror = function () {
+                // Fallback to polling
+                if (adminProgressEventSource) { adminProgressEventSource.close(); adminProgressEventSource = null; }
+                adminProgressTimer = setInterval(() => { loadAdminProgress(taskId, true); }, 1000);
+            };
+        } catch (_) {
+            adminProgressTimer = setInterval(() => { loadAdminProgress(taskId, true); }, 1000);
+        }
+    } else {
+        adminProgressTimer = setInterval(() => { loadAdminProgress(taskId, true); }, 1000);
+    }
+}
+
+function closeAdminProgressModal() {
+    document.getElementById('adminProgressModal').classList.add('hidden');
+    if (adminProgressTimer) { clearInterval(adminProgressTimer); adminProgressTimer = null; }
+    if (adminProgressEventSource) { adminProgressEventSource.close(); adminProgressEventSource = null; }
+}
+
+document.getElementById('adminProgressModal')?.addEventListener('click', function (e) {
+    if (e.target === this) closeAdminProgressModal();
+});
+
+async function loadAdminProgress(taskId, silent) {
+    try {
+        const res = await fetch(`../api/task_progress.php?task_id=${taskId}`);
+        const data = await res.json();
+        if (!data.success) return;
+        const container = document.getElementById('adminProgressContent');
+        const lastC = adminProgressLastCount[taskId] || 0;
+        if (data.data.length === 0) {
+            if (!silent) container.innerHTML = '<p class="text-center text-[var(--text-muted)] py-4">No progress updates yet. Waiting for staff to report...</p>';
+            return;
+        }
+        const hasNew = !silent || data.data.length !== lastC;
+        if (hasNew) {
+            const prevLen = adminProgressLastCount[taskId] || 0;
+            adminProgressLastCount[taskId] = data.data.length;
+            const wasNearBottom = container && (container.scrollHeight - container.scrollTop - container.clientHeight) < 100;
+            container.innerHTML = data.data.map(p => `
+                <div class="flex ${p.user_role === 'staff' ? 'justify-start' : 'justify-end'}">
+                    <div class="max-w-[85%] p-3 rounded-2xl border" style="background:${p.user_role === 'staff' ? 'rgba(59,130,246,0.15)' : 'rgba(147,51,234,0.15)'}; border-color:${p.user_role === 'staff' ? 'rgba(59,130,246,0.3)' : 'rgba(147,51,234,0.3)'};">
+                        <div class="flex items-center gap-2 mb-1">
+                            <span class="text-xs font-medium">${escHtml(p.user_name)}</span>
+                            <span class="text-xs px-1.5 py-0.5 rounded-full ${p.user_role === 'admin' ? 'bg-purple-500/20 text-purple-400' : 'bg-blue-500/20 text-blue-400'}">${p.user_role}</span>
+                        </div>
+                        <p class="text-sm whitespace-pre-wrap">${escHtml(p.message)}</p>
+                        <p class="text-xs text-[var(--text-muted)] mt-1">${p.created_at}</p>
+                    </div>
+                </div>
+            `).join('');
+            if (silent && wasNearBottom) container.scrollTop = container.scrollHeight;
+            // Auto-scroll on new message
+            if (!silent) setTimeout(() => { container.scrollTop = container.scrollHeight; }, 100);
+        }
+    } catch (_) {}
+}
+
+// ─── ADMIN REPLY TO PROGRESS ────────────────────────
+document.getElementById('adminProgressReplyForm')?.addEventListener('submit', async function (e) {
+    e.preventDefault();
+    const taskId = document.getElementById('adminProgressTaskId').value;
+    const message = document.getElementById('adminProgressReplyMessage').value.trim();
+    if (!message) return;
+    const btn = this.querySelector('button[type="submit"]');
+    btn.disabled = true;
+    try {
+        const formData = new FormData();
+        formData.append('task_id', taskId);
+        formData.append('message', message);
+        const res = await fetch('../api/task_progress.php', { method: 'POST', body: formData });
+        const data = await res.json();
+        if (data.success) {
+            document.getElementById('adminProgressReplyMessage').value = '';
+            adminProgressLastCount[taskId] = -1;
+            await loadAdminProgress(taskId);
+            showNotification('Reply sent to staff', 'success', 2000);
+        } else {
+            showToast(data.message, 'error');
+        }
+    } catch (err) { showToast('Network error', 'error'); }
+    finally { btn.disabled = false; }
+});
+
+document.getElementById('adminProgressReplyMessage')?.addEventListener('keydown', function (e) {
+    if (e.key === 'Enter' && !e.shiftKey) {
+        e.preventDefault();
+        document.getElementById('adminProgressReplyForm')?.requestSubmit();
+    }
+});
+
 // ─── NOTE MODAL ──────────────────────────────────────
 function showNoteModal(btn) {
     const note = typeof btn === 'string' ? btn : btn.dataset.note;
@@ -793,6 +922,132 @@ function escHtml(str) {
 function escHtmlAttr(str) {
     return (str || '').replace(/\\/g, '\\\\').replace(/'/g, "\\'").replace(/\n/g, '\\n').replace(/\r/g, '').replace(/\//g, '\\/');
 }
+
+// ─── PROFILE DROPDOWN ──────────────────────────────
+function toggleProfileDropdown() {
+    const menu = document.getElementById('profileDropdownMenu');
+    const isHidden = menu.classList.contains('hidden');
+    if (isHidden) {
+        menu.classList.remove('hidden');
+        menu.style.opacity = '0';
+        menu.style.transform = 'translateY(-8px)';
+        requestAnimationFrame(() => {
+            menu.style.transition = 'all 0.2s';
+            menu.style.opacity = '1';
+            menu.style.transform = 'translateY(0)';
+        });
+    } else {
+        menu.style.opacity = '0';
+        menu.style.transform = 'translateY(-8px)';
+        setTimeout(() => menu.classList.add('hidden'), 200);
+    }
+}
+
+document.addEventListener('click', function (e) {
+    const wrapper = document.getElementById('profileDropdownWrapper');
+    if (wrapper && !wrapper.contains(e.target)) {
+        const menu = document.getElementById('profileDropdownMenu');
+        if (menu && !menu.classList.contains('hidden')) {
+            menu.classList.add('hidden');
+            menu.style.opacity = '';
+            menu.style.transform = '';
+        }
+    }
+});
+
+// ─── PHOTO UPLOAD (ADMIN) ─────────────────────────────
+let cropper = null;
+
+const photoUpload = document.getElementById('photoUpload');
+if (photoUpload) {
+    photoUpload.addEventListener('change', function () {
+        if (!this.files || !this.files[0]) return;
+        const file = this.files[0];
+        const reader = new FileReader();
+        reader.onload = function (e) {
+            const img = document.getElementById('cropImage');
+            img.src = e.target.result;
+            document.getElementById('cropModal').classList.remove('hidden');
+            if (cropper) cropper.destroy();
+            cropper = new Cropper(img, {
+                aspectRatio: 1,
+                viewMode: 1,
+                dragMode: 'move',
+                autoCropArea: 1,
+                cropBoxMovable: true,
+                cropBoxResizable: true,
+                background: false,
+            });
+        };
+        reader.readAsDataURL(file);
+        this.value = '';
+    });
+}
+
+function uploadCroppedPhoto() {
+    if (!cropper) return;
+    const canvas = cropper.getCroppedCanvas({ width: 400, height: 400 });
+    const btn = document.getElementById('cropUploadBtn');
+    const btnText = document.getElementById('cropBtnText');
+    const spinner = document.getElementById('cropSpinner');
+    const progressWrap = document.getElementById('uploadProgressWrap');
+    const progressBar = document.getElementById('uploadProgressBar');
+    const progressText = document.getElementById('uploadProgressText');
+
+    btn.disabled = true;
+    btnText.textContent = 'Uploading...';
+    spinner.classList.remove('hidden');
+    progressWrap.classList.remove('hidden');
+
+    canvas.toBlob(function (blob) {
+        const formData = new FormData();
+        formData.append('photo', blob, 'profile.jpg');
+
+        const xhr = new XMLHttpRequest();
+        xhr.open('POST', '../api/upload.php', true);
+
+        xhr.upload.onprogress = function (e) {
+            if (e.lengthComputable) {
+                const pct = Math.round((e.loaded / e.total) * 100);
+                progressBar.style.width = pct + '%';
+                progressText.textContent = pct + '%';
+            }
+        };
+
+        xhr.onload = function () {
+            try {
+                const data = JSON.parse(xhr.responseText);
+                if (data.success) { showToast('Photo updated!'); location.reload(); }
+                else { showToast(data.message, 'error'); }
+            } catch (err) { showToast('Upload failed', 'error'); }
+            btn.disabled = false;
+            btnText.textContent = 'Upload';
+            spinner.classList.add('hidden');
+        };
+
+        xhr.onerror = function () {
+            showToast('Upload failed', 'error');
+            btn.disabled = false;
+            btnText.textContent = 'Upload';
+            spinner.classList.add('hidden');
+        };
+
+        xhr.send(formData);
+    }, 'image/jpeg', 0.9);
+}
+
+function closeCropModal() {
+    document.getElementById('cropModal').classList.add('hidden');
+    document.getElementById('uploadProgressWrap').classList.add('hidden');
+    document.getElementById('uploadProgressBar').style.width = '0%';
+    document.getElementById('uploadProgressText').textContent = '0%';
+    if (cropper) { cropper.destroy(); cropper = null; }
+}
+
+// Close crop modal on backdrop click
+document.getElementById('cropModal')?.addEventListener('click', function (e) {
+    if (e.target === this) closeCropModal();
+});
 
 // ─── INIT ────────────────────────────────────────────
 const savedSection = sessionStorage.getItem('admin_section');

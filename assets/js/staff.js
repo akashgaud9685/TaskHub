@@ -203,8 +203,13 @@ function renderActions(task) {
     if (task.status === 'in-progress') {
         return `
             <div class="flex flex-col gap-2 w-full sm:w-auto">
-                <textarea id="notes-${task.id}" placeholder="Add work notes (optional)..." rows="2" 
-                          class="text-sm w-full sm:w-64"></textarea>
+                <div class="flex gap-2">
+                    <button onclick="openProgressModal(${task.id}, '${escHtmlAttr(task.title)}')" class="btn-primary text-sm flex-1 whitespace-nowrap" style="background:#2563eb">+ Update Progress</button>
+                    <button onclick="viewProgress(${task.id})" class="btn-ghost text-sm px-2" title="View progress updates">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+                    </button>
+                </div>
+                <textarea id="notes-${task.id}" placeholder="Final notes on completion..." rows="2" class="text-sm w-full sm:w-64"></textarea>
                 <div class="flex gap-2">
                     <button onclick="completeTask(${task.id}, '${escHtmlAttr(task.title)}')" class="btn-success text-sm flex-1 whitespace-nowrap">Mark Completed</button>
                     <button onclick="undoTask(${task.id}, 'todo')" class="btn-ghost text-sm px-3" title="Move back to To-Do">
@@ -217,14 +222,165 @@ function renderActions(task) {
 
     if (task.status === 'completed') {
         return `
-            <div class="flex gap-2">
+            <div class="flex gap-2 items-center">
                 <span class="inline-flex items-center gap-1.5 text-emerald-500 text-sm font-medium"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>Completed</span>
+                <button onclick="viewProgress(${task.id})" class="btn-ghost text-sm px-2" title="View work history">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                </button>
             </div>
         `;
     }
 
     return '';
 }
+
+// ─── PROGRESS MODAL ──────────────────────────────────
+function openProgressModal(taskId, taskTitle) {
+    document.getElementById('progressTaskId').value = taskId;
+    document.getElementById('progressTaskTitle').textContent = taskTitle;
+    document.getElementById('progressMessage').value = '';
+    document.getElementById('progressModal').classList.remove('hidden');
+    document.getElementById('progressMessage').focus();
+}
+
+function closeProgressModal() {
+    document.getElementById('progressModal').classList.add('hidden');
+}
+
+document.getElementById('progressModal')?.addEventListener('click', function (e) {
+    if (e.target === this) closeProgressModal();
+});
+
+document.getElementById('progressForm')?.addEventListener('submit', async function (e) {
+    e.preventDefault();
+    const taskId = document.getElementById('progressTaskId').value;
+    const message = document.getElementById('progressMessage').value.trim();
+    if (!message) return;
+    const btn = this.querySelector('button[type="submit"]');
+    btn.disabled = true;
+    try {
+        const formData = new FormData();
+        formData.append('task_id', taskId);
+        formData.append('message', message);
+        const res = await fetch('../api/task_progress.php', { method: 'POST', body: formData });
+        const data = await res.json();
+        if (data.success) { showToast('Progress updated! Admin will see it live.'); closeProgressModal(); }
+        else showToast(data.message, 'error');
+    } catch (err) { showToast('Network error', 'error'); }
+    finally { btn.disabled = false; }
+});
+
+// ─── VIEW PROGRESS ──────────────────────────────────
+let progressRefreshTimer = null;
+let progressLastCount = 0;
+let progressEventSource = null;
+
+function viewProgress(taskId) {
+    document.getElementById('viewProgressTaskId').value = taskId;
+    document.getElementById('viewProgressModal').classList.remove('hidden');
+    document.getElementById('viewProgressContent').innerHTML = '<p class="text-center text-[var(--text-muted)] py-4">Loading...</p>';
+    progressLastCount = -1;
+    delete staffNotifiedTasks[taskId];
+    loadProgressView(taskId);
+
+    if (progressRefreshTimer) clearInterval(progressRefreshTimer);
+
+    // Use SSE for instant updates
+    if (typeof EventSource !== 'undefined') {
+        try {
+            if (progressEventSource) progressEventSource.close();
+            progressEventSource = new EventSource('../api/sse.php');
+            progressEventSource.onmessage = function (e) {
+                if (e.data === 'reload') {
+                    loadProgressView(taskId, true);
+                }
+            };
+            progressEventSource.onerror = function () {
+                if (progressEventSource) { progressEventSource.close(); progressEventSource = null; }
+                progressRefreshTimer = setInterval(() => { loadProgressView(taskId, true); }, 1000);
+            };
+        } catch (_) {
+            progressRefreshTimer = setInterval(() => { loadProgressView(taskId, true); }, 1000);
+        }
+    } else {
+        progressRefreshTimer = setInterval(() => { loadProgressView(taskId, true); }, 1000);
+    }
+}
+
+function closeViewProgressModal() {
+    document.getElementById('viewProgressModal').classList.add('hidden');
+    if (progressRefreshTimer) { clearInterval(progressRefreshTimer); progressRefreshTimer = null; }
+    if (progressEventSource) { progressEventSource.close(); progressEventSource = null; }
+}
+
+document.getElementById('viewProgressModal')?.addEventListener('click', function (e) {
+    if (e.target === this) closeViewProgressModal();
+});
+
+async function loadProgressView(taskId, silent) {
+    try {
+        const res = await fetch(`../api/task_progress.php?task_id=${taskId}`);
+        const data = await res.json();
+        if (!data.success) throw new Error('Failed');
+        const container = document.getElementById('viewProgressContent');
+        const lastC = progressLastCount;
+        if (data.data.length === 0) {
+            if (!silent) container.innerHTML = '<p class="text-center text-[var(--text-muted)] py-4">No progress updates yet</p>';
+            return;
+        }
+        if (silent && data.data.length === lastC) return;
+        progressLastCount = data.data.length;
+        const wasNearBottom = container && (container.scrollHeight - container.scrollTop - container.clientHeight) < 100;
+        container.innerHTML = data.data.map(p => `
+            <div class="flex ${p.user_role === 'staff' ? 'justify-end' : 'justify-start'}">
+                <div class="max-w-[85%] p-3 rounded-2xl border" style="background:${p.user_role === 'staff' ? 'rgba(59,130,246,0.15)' : 'rgba(147,51,234,0.15)'}; border-color:${p.user_role === 'staff' ? 'rgba(59,130,246,0.3)' : 'rgba(147,51,234,0.3)'};">
+                    <div class="flex items-center gap-2 mb-1">
+                        <span class="text-xs font-medium">${escHtml(p.user_name)}</span>
+                        <span class="text-xs px-1.5 py-0.5 rounded-full ${p.user_role === 'admin' ? 'bg-purple-500/20 text-purple-400' : 'bg-blue-500/20 text-blue-400'}">${p.user_role}</span>
+                    </div>
+                    <p class="text-sm whitespace-pre-wrap">${escHtml(p.message)}</p>
+                    <p class="text-xs text-[var(--text-muted)] mt-1">${p.created_at}</p>
+                </div>
+            </div>
+        `).join('');
+        if (silent && wasNearBottom) container.scrollTop = container.scrollHeight;
+        if (!silent) setTimeout(() => { container.scrollTop = container.scrollHeight; }, 100);
+    } catch (_) {}
+}
+
+// ─── STAFF REPLY TO PROGRESS (in view modal) ────────
+document.getElementById('viewProgressReplyForm')?.addEventListener('submit', async function (e) {
+    e.preventDefault();
+    const taskId = document.getElementById('viewProgressTaskId').value;
+    const message = document.getElementById('viewProgressReplyMessage').value.trim();
+    if (!message) return;
+    const btn = this.querySelector('button[type="submit"]');
+    btn.disabled = true;
+    try {
+        const formData = new FormData();
+        formData.append('task_id', taskId);
+        formData.append('message', message);
+        const res = await fetch('../api/task_progress.php', { method: 'POST', body: formData });
+        const data = await res.json();
+        if (data.success) {
+            document.getElementById('viewProgressReplyMessage').value = '';
+            progressLastCount = -1;
+            await loadProgressView(taskId);
+            showNotification('Reply sent to admin', 'success', 2000);
+        } else {
+            showToast(data.message, 'error');
+        }
+    } catch (err) { showToast('Network error', 'error'); }
+    finally { btn.disabled = false; }
+});
+
+document.getElementById('viewProgressReplyMessage')?.addEventListener('keydown', function (e) {
+    if (e.key === 'Enter' && !e.shiftKey) {
+        e.preventDefault();
+        document.getElementById('viewProgressReplyForm')?.requestSubmit();
+    }
+});
+
 
 // ─── START TASK ──────────────────────────────────────
 async function startTask(taskId) {
@@ -313,17 +469,12 @@ function checkForUpdates() {
 function startLiveCheck() {
     if (checkInterval) clearInterval(checkInterval);
     checkForUpdates();
-    checkInterval = setInterval(checkForUpdates, 10000);
+    checkInterval = setInterval(checkForUpdates, 5000);
 }
 
 function stopLiveCheck() {
     if (checkInterval) { clearInterval(checkInterval); checkInterval = null; }
 }
-
-document.addEventListener('visibilitychange', () => {
-    if (document.hidden) stopLiveCheck();
-    else startLiveCheck();
-});
 
 // ─── SESSION CHECK ──────────────────────────────────
 let sessionInterval;
@@ -448,20 +599,30 @@ async function loadMyLogs() {
             container.innerHTML = '<div class="text-center text-[var(--text-muted)] py-8">No work logs found.</div>';
             return;
         }
-        container.innerHTML = data.data.map(w => `
-            <div class="border rounded-xl p-4" style="border-color:var(--border-color);background:var(--bg-card);">
+        container.innerHTML = data.data.map(w => {
+            const hasReplies = parseInt(w.reply_count) > 0;
+            return `
+            <div class="border rounded-xl p-4 fade-in" style="border-color:var(--border-color);background:var(--bg-card);">
                 <div class="flex items-start justify-between gap-3">
-                    <p class="text-sm whitespace-pre-wrap">${escHtml(w.description)}</p>
-                    <span class="text-xs text-[var(--text-muted)] whitespace-nowrap">${w.log_date}</span>
+                    <div class="flex-1 min-w-0">
+                        <div class="flex items-center gap-2 mb-1">
+                            <span class="w-2 h-2 rounded-full bg-emerald-500 flex-shrink-0"></span>
+                            <span class="text-xs font-medium text-emerald-500">Work Log</span>
+                            ${hasReplies ? '<span class="text-xs px-1.5 py-0.5 rounded-full bg-purple-500/20 text-purple-400">' + w.reply_count + ' reply</span>' : ''}
+                        </div>
+                        <p class="text-sm whitespace-pre-wrap">${escHtml(w.description)}</p>
+                    </div>
+                    <span class="text-xs text-[var(--text-muted)] whitespace-nowrap flex-shrink-0">${w.log_date}</span>
                 </div>
-                <div class="flex items-center justify-between mt-2">
+                <div class="flex items-center justify-between mt-3 pt-3 border-t" style="border-color:var(--border-subtle);">
                     <p class="text-xs text-[var(--text-muted)]">Logged: ${new Date(w.created_at).toLocaleString()}</p>
-                    <button onclick="openStaffReply(${w.id})" class="text-xs text-purple-500 hover:text-purple-400 transition font-medium">
-                        ${parseInt(w.reply_count) > 0 ? `View (${w.reply_count})` : 'Reply'}
+                    <button onclick="openStaffReply(${w.id})" class="text-xs text-purple-500 hover:text-purple-400 transition font-medium flex items-center gap-1">
+                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"/></svg>
+                        ${hasReplies ? `View (${w.reply_count})` : 'Reply'}
                     </button>
                 </div>
-            </div>
-        `).join('');
+            </div>`;
+        }).join('');
     } catch (err) {
         container.innerHTML = '<div class="text-center text-red-500 py-8">Failed to load logs</div>';
     }

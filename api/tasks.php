@@ -161,8 +161,10 @@ try {
                 ':bid'         => !empty($_SESSION['business_id']) ? (int)$_SESSION['business_id'] : null,
             ]);
 
+            $newId = (int)$stmt->fetchColumn();
             notifyStaff();
-            echo json_encode(['success' => true, 'message' => 'Task assigned successfully', 'id' => (int)$stmt->fetchColumn()]);
+
+            echo json_encode(['success' => true, 'message' => 'Task assigned successfully', 'id' => $newId]);
             break;
 
         // ── UPDATE TASK (status, notes, or admin edit) ─
@@ -290,6 +292,7 @@ try {
             }
 
             notifyStaff();
+
             echo json_encode(['success' => true, 'message' => 'Task updated successfully']);
             break;
 

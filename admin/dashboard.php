@@ -75,6 +75,13 @@ if ($bizId) {
     $departments = $db->query("SELECT id, name FROM departments ORDER BY CASE WHEN name = 'Management' THEN 0 ELSE 1 END, name ASC")->fetchAll();
 }
 
+$adminUser = null;
+try {
+    $adminStmt = $db->prepare('SELECT id, name, username, email, role, department, status, photo, created_at FROM users WHERE id = :id');
+    $adminStmt->execute([':id' => $_SESSION['user_id']]);
+    $adminUser = $adminStmt->fetch();
+} catch (\Throwable $e) { $adminUser = null; }
+
 $business = null;
 $mainDb = getDB();
 if (!empty($_SESSION['business_id'])) {
@@ -99,7 +106,9 @@ if (!empty($_SESSION['business_id'])) {
     <title>TaskHub — Admin Dashboard</title>
     <link rel="icon" type="image/x-icon" href="../favicon.ico">
     <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.6.1/cropper.min.css">
     <link rel="stylesheet" href="../assets/css/app.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.6.1/cropper.min.js"></script>
 </head>
 <body class="min-h-screen">
 
@@ -112,10 +121,53 @@ if (!empty($_SESSION['business_id'])) {
                     <h1 class="text-xl font-bold"><span class="text-purple-500">Task</span>Hub</h1>
                     <span class="text-xs bg-purple-500/20 text-purple-500 px-2 py-0.5 rounded-full font-medium">Admin</span>
                 </div>
-                <div class="flex items-center gap-3">
+                <div class="flex items-center gap-1 sm:gap-3 flex-wrap justify-end">
                     <button onclick="toggleTheme()" class="theme-toggle" title="Toggle theme"></button>
-                    <span class="text-sm text-[var(--text-secondary)] hidden sm:inline"><?= htmlspecialchars($_SESSION['name']) ?></span>
-                    <a href="../logout.php" class="text-sm text-[var(--text-secondary)] hover:text-red-500 transition">Logout</a>
+
+                    <!-- Profile Dropdown Trigger -->
+                    <div class="relative" id="profileDropdownWrapper">
+                        <button onclick="toggleProfileDropdown()" class="w-9 h-9 rounded-full overflow-hidden border-2 border-purple-500/50 flex items-center justify-center bg-[var(--bg-input)] cursor-pointer hover:opacity-80 transition flex-shrink-0" id="profileTrigger">
+                            <?php if ($adminUser && $adminUser['photo']): ?>
+                                <img src="../uploads/profile/<?= htmlspecialchars($adminUser['photo']) ?>" alt="" class="w-full h-full object-cover">
+                            <?php else: ?>
+                                <span class="text-sm font-bold text-purple-400"><?= strtoupper(substr($_SESSION['name'], 0, 1)) ?></span>
+                            <?php endif; ?>
+                        </button>
+                        <!-- Dropdown Menu -->
+                        <div id="profileDropdownMenu" class="absolute right-0 top-full mt-2 w-64 rounded-xl border shadow-xl hidden" style="background:var(--bg-page); border-color:var(--border-color); z-index:100;">
+                            <div class="p-4">
+                                <div class="flex items-center gap-3 mb-3 pb-3 border-b" style="border-color:var(--border-color);">
+                                    <div class="relative w-12 h-12 rounded-full overflow-hidden border-2 border-purple-500/50 bg-[var(--bg-input)] flex items-center justify-center flex-shrink-0">
+                                        <?php if ($adminUser && $adminUser['photo']): ?>
+                                            <img id="dropdownProfileImg" src="../uploads/profile/<?= htmlspecialchars($adminUser['photo']) ?>" alt="" class="w-full h-full object-cover">
+                                        <?php else: ?>
+                                            <span class="text-lg font-bold text-purple-400"><?= strtoupper(substr($_SESSION['name'], 0, 1)) ?></span>
+                                        <?php endif; ?>
+                                        <label for="photoUpload" class="absolute bottom-0 right-0 w-5 h-5 bg-purple-600 rounded-full flex items-center justify-center cursor-pointer hover:bg-purple-700 transition shadow-lg" title="Change photo">
+                                            <svg class="w-2.5 h-2.5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+                                            <input type="file" id="photoUpload" accept="image/*" class="hidden">
+                                        </label>
+                                    </div>
+                                    <div class="min-w-0">
+                                        <p class="font-semibold text-sm truncate"><?= htmlspecialchars($_SESSION['name']) ?></p>
+                                        <p class="text-xs text-[var(--text-secondary)] truncate"><?= htmlspecialchars($_SESSION['username'] ?? '') ?></p>
+                                        <?php if ($business): ?>
+                                            <p class="text-xs text-purple-400 truncate mt-0.5"><?= htmlspecialchars($business['business_name']) ?></p>
+                                        <?php endif; ?>
+                                    </div>
+                                </div>
+                                <div class="space-y-2 text-sm">
+                                    <div class="flex justify-between"><span class="text-[var(--text-secondary)]">Role</span><span class="text-purple-400">Admin</span></div>
+                                    <div class="flex justify-between"><span class="text-[var(--text-secondary)]">Status</span><span class="text-emerald-500">Active</span></div>
+                                    <div class="flex justify-between"><span class="text-[var(--text-secondary)]">Business Code</span><span class="text-xs font-mono text-purple-400"><?= htmlspecialchars($business['business_code'] ?? '—') ?></span></div>
+                                </div>
+                                <button onclick="switchSection('profile'); document.getElementById('profileDropdownMenu').classList.add('hidden');" class="w-full mt-3 text-center text-xs text-purple-400 hover:text-purple-300 font-medium transition py-2 rounded-lg hover:bg-purple-500/10">View Business Profile</button>
+                            </div>
+                            <div class="border-t p-3" style="border-color:var(--border-color);">
+                                <a href="../logout.php" class="block w-full text-center text-sm text-red-500 hover:text-red-400 font-medium transition">Logout</a>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
@@ -531,6 +583,24 @@ if (!empty($_SESSION['business_id'])) {
         </div>
     </div>
 
+    <!-- ─── ADMIN PROGRESS MODAL ─────────────────── -->
+    <div id="adminProgressModal" class="fixed inset-0 z-50 hidden flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
+        <div class="rounded-2xl p-6 max-w-2xl w-full shadow-2xl border max-h-[90vh] overflow-y-auto" style="background:var(--bg-page); border-color:var(--border-color);">
+            <div class="flex items-center justify-between mb-4">
+                <h3 class="text-lg font-semibold">Task Progress <span class="text-xs text-emerald-500 font-normal ml-2">● Live</span></h3>
+                <button onclick="closeAdminProgressModal()" class="text-[var(--text-secondary)] hover:text-[var(--text-primary)] transition text-2xl leading-none">&times;</button>
+            </div>
+            <div id="adminProgressContent" class="space-y-3 mb-4 min-h-[80px]">
+                <p class="text-center text-[var(--text-muted)] py-4">Loading progress...</p>
+            </div>
+            <input type="hidden" id="adminProgressTaskId" value="">
+            <form id="adminProgressReplyForm" class="flex gap-3 pt-3 border-t" style="border-color:var(--border-color);">
+                <textarea id="adminProgressReplyMessage" rows="2" placeholder="Reply to staff (will notify them live)..." required class="w-full text-sm"></textarea>
+                <button type="submit" class="btn-primary text-sm whitespace-nowrap self-end">Send</button>
+            </form>
+        </div>
+    </div>
+
     <!-- ─── WORK LOG REPLY MODAL ────────────────── -->
     <div id="workLogReplyModal" class="fixed inset-0 z-50 hidden flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
         <div class="rounded-2xl p-6 max-w-2xl w-full shadow-2xl border max-h-[90vh] overflow-y-auto" style="background:var(--bg-page); border-color:var(--border-color);">
@@ -558,6 +628,32 @@ if (!empty($_SESSION['business_id'])) {
             <div class="p-4 rounded-lg border text-sm whitespace-pre-wrap" style="background:var(--notes-bg); border-color:var(--notes-border); color:var(--text-primary);" id="noteModalContent"></div>
             <div class="mt-4 flex justify-end">
                 <button onclick="closeNoteModal()" class="btn-ghost">Close</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ─── CROP MODAL ────────────────────────────── -->
+    <div id="cropModal" class="fixed inset-0 z-50 hidden flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
+        <div class="rounded-2xl p-6 max-w-lg w-full shadow-2xl border" style="background:var(--bg-page); border-color:var(--border-color);">
+            <div class="flex items-center justify-between mb-4">
+                <h3 class="text-lg font-semibold">Crop Profile Photo</h3>
+                <button onclick="closeCropModal()" class="text-[var(--text-secondary)] hover:text-[var(--text-primary)] transition text-2xl leading-none">&times;</button>
+            </div>
+            <div class="w-full max-h-[50vh] overflow-hidden rounded-lg bg-black/20 flex items-center justify-center">
+                <img id="cropImage" src="" alt="Crop preview" class="max-w-full max-h-[50vh]">
+            </div>
+            <div class="flex items-center gap-3 mt-4">
+                <button onclick="uploadCroppedPhoto()" id="cropUploadBtn" class="btn-primary flex-1 flex items-center justify-center gap-2">
+                    <span id="cropBtnText">Upload</span>
+                    <span id="cropSpinner" class="hidden w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></span>
+                </button>
+                <button onclick="closeCropModal()" class="btn-ghost">Cancel</button>
+            </div>
+            <div id="uploadProgressWrap" class="hidden mt-3">
+                <div class="w-full bg-[var(--bg-input)] rounded-full h-2 overflow-hidden">
+                    <div id="uploadProgressBar" class="bg-purple-600 h-2 rounded-full transition-all duration-300" style="width:0%"></div>
+                </div>
+                <p id="uploadProgressText" class="text-xs text-[var(--text-secondary)] mt-1 text-center">0%</p>
             </div>
         </div>
     </div>

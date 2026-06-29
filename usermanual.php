@@ -239,6 +239,9 @@ TaskHub is a comprehensive task management and workflow automation system design
 <div class="bg-emerald-500/10 rounded-lg p-3 border border-emerald-500/20"><span class="text-emerald-400 font-medium">Completed</span><p class="text-xs text-slate-500 mt-1">Task finished</p></div>
 </div>
 
+<h4 class="font-semibold text-sm mt-4 mb-2 text-purple-400">Live Task Progress</h4>
+<p class="text-sm text-slate-400">For tasks that are "In Progress", click the <strong>"Live"</strong> button to open a real-time chat interface. You can see progress updates from staff instantly and reply — the conversation updates in real-time like WhatsApp using Server-Sent Events (SSE). Press <kbd>Enter</kbd> to send, <kbd>Shift</kbd>+<kbd>Enter</kbd> for a new line. A purple pulse indicator on the task row shows when a new message from staff arrives.</p>
+
 <h4 class="font-semibold text-sm mt-4 mb-2 text-purple-400">Editing Tasks</h4>
 <p class="text-sm text-slate-400">Click the <strong>"Edit"</strong> button in the task tracker to open the edit modal. You can modify the title, assigned staff, priority, status, due date, and description.</p>
 
@@ -264,15 +267,24 @@ TaskHub is a comprehensive task management and workflow automation system design
 </ul>
 </div>
 
-<!-- Business Profile -->
+<!-- Profile & Business Profile -->
 <div id="admin-profile" class="section-card bg-white/5 rounded-xl p-6 border border-white/10">
-<h3 class="text-lg font-semibold mb-3">Business Profile</h3>
-<p class="text-sm text-slate-400 leading-relaxed mb-4">View your registered business information:</p>
+<h3 class="text-lg font-semibold mb-3">Profile &amp; Business Profile</h3>
+<p class="text-sm text-slate-400 leading-relaxed mb-4">Your admin profile is accessible from the top-right corner profile icon.</p>
+
+<h4 class="font-semibold text-sm mt-4 mb-2 text-purple-400">Profile Dropdown</h4>
+<ul class="space-y-2 text-sm text-slate-400">
+<li><strong>Profile Photo</strong> — Click your profile picture (or initial badge) to open the dropdown. Click the camera icon on the photo to upload or change your profile picture with crop support.</li>
+<li><strong>Account Details</strong> — View your name, username, business name, role, status, and business code.</li>
+<li><strong>Business Profile</strong> — Click "View Business Profile" from the dropdown to see your registered business information including business name, code, owner details, and address.</li>
+<li><strong>Logout</strong> — Click "Logout" to end your session.</li>
+</ul>
+
+<h4 class="font-semibold text-sm mt-4 mb-2 text-purple-400">Business Information</h4>
 <ul class="space-y-2 text-sm text-slate-400">
 <li><strong>Business Name</strong> — The name you registered with.</li>
 <li><strong>Business Code</strong> — Your unique code for staff login. Share this with your team.</li>
 <li><strong>Owner Details</strong> — Owner name, email, phone, and address.</li>
-<li><strong>Username</strong> — Your login username.</li>
 </ul>
 <div class="mt-4 p-3 rounded-lg bg-amber-500/10 border border-amber-500/20 text-sm text-amber-400">
 <strong>Note:</strong> Business profile details cannot be edited. If you need to change any information, please contact TaskHub support.
@@ -392,7 +404,7 @@ TaskHub is a comprehensive task management and workflow automation system design
 <div class="section-card bg-white/5 rounded-xl p-5 border border-white/10">
 <div class="flex items-start gap-3">
 <div class="w-10 h-10 rounded-lg bg-cyan-600/20 flex items-center justify-center flex-shrink-0"><svg class="w-5 h-5 text-cyan-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg></div>
-<div><h3 class="font-semibold text-sm">Real-Time Updates</h3><p class="text-xs text-slate-500 mt-1">Automatic polling ensures dashboards stay synchronized without manual refresh.</p></div>
+<div><h3 class="font-semibold text-sm">Real-Time Updates</h3><p class="text-xs text-slate-500 mt-1">Real-time task progress chat with SSE (Server-Sent Events) and instant polling — like WhatsApp.</p></div>
 </div>
 </div>
 <div class="section-card bg-white/5 rounded-xl p-5 border border-white/10">
